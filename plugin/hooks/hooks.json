@@ -1,0 +1,15 @@
+{
+	"hooks": {
+		"UserPromptSubmit": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "echo 'pstack: new coding task (feature, bug fix, refactor, perf work, PR or CI work)? Invoke the pstack:poteto-mode skill before starting, once per task. General question, explanation, chat, or user opts out -> do not.'",
+						"timeout": 5
+					}
+				]
+			}
+		]
+	}
+}
