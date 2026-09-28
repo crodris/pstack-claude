@@ -20,8 +20,9 @@ const REPO = "https://github.com/cursor/plugins";
 // Cursor Automations webhooks, no Claude Code equivalent.
 const SKIP_SKILLS = ["make-bot-ui"];
 
-// Upstream marks every skill user-invocable only. These the model has to invoke itself: poteto-mode from the reminder hook.
-const MODEL_INVOKED = ["poteto-mode"];
+// Upstream marks every skill user-invocable only. The model has to invoke these itself,
+// poteto-mode from the reminder hook and unslop from writing skills such as voice.
+const MODEL_INVOKED = ["poteto-mode", "unslop"];
 
 // Ordered. Specific before generic.
 const REPLACEMENTS = [
