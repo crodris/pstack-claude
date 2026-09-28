@@ -5,7 +5,9 @@ version: 2
 # a finding here is upstream's wording. A new finding after an upstream pull fails CI
 # until someone reads it and either adds a rule here or keeps the old plugin/.
 # Rules match on id + path + excerpt text, not line numbers, so unrelated upstream edits
-# do not re-flag them. Each skill is scanned on its own, so `path` is relative to it.
+# do not re-flag them. Each skill is scanned on its own, so `path` is relative to it and
+# a rule on "SKILL.md" covers that path in every skill. Built against SkillSpector v2.12.0;
+# re-review the scan when the pin changes.
 # Docs: https://github.com/NVIDIA/SkillSpector/blob/main/docs/SUPPRESSION.md
 rules:
   # RA2 "Session Persistence" fires on the imperative "write"/"create" in ordinary
@@ -115,14 +117,19 @@ rules:
     reason: >-
       poteto-mode's Autonomy section lets reversible work proceed without asking and
       lists irreversible writes that always pause. automate-me uses the phrase as a
-      section heading for the user's own autonomy preferences.
+      section heading for the user's own autonomy preferences. The finding text is only
+      the phrase, so this rule hides "without asking" in every SKILL.md, including new
+      upstream uses; re-read the upstream diff for the phrase when pulling.
   - id: "TM1"
-    path: "playbooks/*.md"
+    path: "playbooks/autopilot-full.md"
     message: "git push --force"
     reason: >-
-      autopilot-full and babysit publish a rebase of the agent's own branch with
-      `git push --force-with-lease` after an `ls-remote` check, and say never to
-      force-push a shared branch.
+      Publishes a rebase of the agent's own branch with `git push --force-with-lease`
+      after an `ls-remote` check, and says never to force-push a shared branch.
+  - id: "TM1"
+    path: "playbooks/babysit.md"
+    message: "git push --force"
+    reason: "The owner publishes its own rebase with `git push --force-with-lease`, per autopilot-full."
   - id: "TM1"
     path: "playbooks/opening-a-pr.md"
     message: "git reset --hard"
@@ -136,7 +143,9 @@ rules:
       only if the user runs those scripts with bun.
   - id: "LP3"
     path: "SKILL.md"
-    reason: "poteto-mode declares no `permissions` field. Claude Code skills have no such field."
+    reason: >-
+      Missing `permissions` field, reported for poteto-mode. Claude Code skills have no
+      such field, so this rule applies to every skill.
 
   # Pattern misfires.
   - id: "MP3"

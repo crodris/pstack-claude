@@ -24,7 +24,7 @@ cd "$repo_root"
 
 if ! command -v skillspector >/dev/null 2>&1; then
   echo "skillspector not found. Install it with:" >&2
-  echo "  uv tool install git+https://github.com/NVIDIA/skillspector.git@34f60308522f45447cd343da0aad77bcea308ad4" >&2
+  echo "  uv tool install git+https://github.com/NVIDIA/skillspector.git@c7958a3268d9498644b22edb75d0f051bbc8cbfc" >&2
   exit 1
 fi
 
@@ -93,10 +93,17 @@ for issue in active:
     loc = issue["location"]
     print(f"  {issue['id']} {issue['pattern']} [{issue['severity']}] "
           f"{loc['file']}:{loc['start_line']}")
-sys.exit(1 if active else 0)
+# 3 means active findings; any other failure, such as a malformed report, exits 1.
+sys.exit(3 if active else 0)
 PY
-)" && skill_ok=0 || skill_ok=1
+)" && assess_status=0 || assess_status=$?
     echo "$summary"
+    if [ "$assess_status" -ne 0 ] && [ "$assess_status" -ne 3 ]; then
+      echo "ERROR: could not read the SkillSpector report for $skill" >&2
+      crashes=$((crashes + 1))
+      rm -f "$json"
+      continue
+    fi
 
     if [ -n "${REPORT_DIR:-}" ]; then
       cp "$json" "$REPORT_DIR/$skill.json"
@@ -147,7 +154,7 @@ PY
     fi
     rm -f "$json"
 
-    [ "$skill_ok" -ne 0 ] && failures=$((failures + 1))
+    [ "$assess_status" -eq 3 ] && failures=$((failures + 1))
 done
 
 if [ "$scanned" -eq 0 ]; then
@@ -172,4 +179,4 @@ if [ "$failures" -gt 0 ] || [ "$crashes" -gt 0 ]; then
 fi
 
 echo
-echo "PASS: all scanned skills are clean (suppressions documented in baselines)."
+echo "PASS: all scanned skills are clean (suppressions documented in .skillspector-baseline.yaml)."

@@ -15,6 +15,7 @@ const SRC = join(UPSTREAM, "pstack");
 const PLUGIN = join(ROOT, "plugin");
 const CHECK = process.argv.includes("--check");
 const OUT = CHECK ? mkdtempSync(join(tmpdir(), "pstack-check-")) : PLUGIN;
+if (CHECK) process.on("exit", () => rmSync(OUT, { recursive: true, force: true }));
 const REPO = "https://github.com/cursor/plugins";
 
 // Cursor Automations webhooks, no Claude Code equivalent.
@@ -202,14 +203,23 @@ if (stillBlocked.length) console.log(`still user-invocable only: ${stillBlocked.
 let failed = residuals.length > 0 || stillBlocked.length > 0;
 
 if (CHECK) {
-	try {
-		execFileSync("git", ["diff", "--no-index", "--stat", "--", PLUGIN, OUT], { stdio: "inherit" });
-		console.log("plugin/ matches convert.mjs output");
-	} catch {
+	// Compare what git would commit, so ignored files such as .DS_Store under plugin/ do not count.
+	const committed = git(["ls-files", "--cached", "--others", "--exclude-standard", "--", "plugin"], ROOT)
+		.split("\n")
+		.filter(Boolean)
+		.map((f) => relative("plugin", f));
+	const generated = walk(OUT).map((f) => relative(OUT, f));
+	const differ = [...new Set([...committed, ...generated])].filter((f) => {
+		const [a, b] = [join(PLUGIN, f), join(OUT, f)];
+		return !existsSync(a) || !existsSync(b) || !readFileSync(a).equals(readFileSync(b));
+	});
+	if (differ.length) {
 		console.log("plugin/ does not match convert.mjs output, run `node convert.mjs` and commit plugin/");
+		for (const f of differ.sort()) console.log(`  plugin/${f}`);
 		failed = true;
+	} else {
+		console.log("plugin/ matches convert.mjs output");
 	}
-	rmSync(OUT, { recursive: true, force: true });
 } else {
 	// Claude Code runs a cached copy of the plugin, not ./plugin, so push the regenerated version into it.
 	try {
