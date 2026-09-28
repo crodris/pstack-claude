@@ -120,8 +120,8 @@ for (const file of walk(OUT)) {
 		const dir = basename(dirname(file));
 		text = text.replace(/^name: .*$/m, `name: ${dir}`);
 		if (!dir.startsWith("principle-")) text += ADAPTER_NOTE;
-		// The reminder hook can only trigger a skill the model is allowed to invoke.
-		if (dir === "poteto-mode") text = text.replace(/^disable-model-invocation: true\n/m, "");
+		// The model has to invoke these itself: poteto-mode from the reminder hook, unslop from writing skills such as voice.
+		if (["poteto-mode", "unslop"].includes(dir)) text = text.replace(/^disable-model-invocation: true\n/m, "");
 	} else if (rel.startsWith("agents/")) {
 		text = text.replace(/^is_background: /m, "background: ") + AGENT_NOTE;
 	}
