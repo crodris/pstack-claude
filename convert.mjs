@@ -1,20 +1,27 @@
 #!/usr/bin/env node
 // Converts cursor/plugins pstack into a Claude Code plugin at ./plugin.
 // Re-run to update: pulls upstream, regenerates ./plugin from scratch, reports leftover Cursor-isms.
+// `--check` regenerates at the upstream commit plugin/ was built from, into a temp dir, and fails if plugin/ differs.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
+import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const UPSTREAM = join(ROOT, ".upstream");
 const SRC = join(UPSTREAM, "pstack");
-const OUT = join(ROOT, "plugin");
+const PLUGIN = join(ROOT, "plugin");
+const CHECK = process.argv.includes("--check");
+const OUT = CHECK ? mkdtempSync(join(tmpdir(), "pstack-check-")) : PLUGIN;
 const REPO = "https://github.com/cursor/plugins";
 
 // Cursor Automations webhooks, no Claude Code equivalent.
 const SKIP_SKILLS = ["make-bot-ui"];
+
+// Upstream marks every skill user-invocable only. These the model has to invoke itself: poteto-mode from the reminder hook.
+const MODEL_INVOKED = ["poteto-mode"];
 
 // Ordered. Specific before generic.
 const REPLACEMENTS = [
@@ -76,13 +83,19 @@ function git(args, cwd) {
 	return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }).trim();
 }
 
-function syncUpstream() {
+function syncUpstream(pin) {
 	if (!existsSync(UPSTREAM)) {
 		git(["clone", "--depth", "1", "--filter=blob:none", "--sparse", `${REPO}.git`, UPSTREAM]);
 		git(["sparse-checkout", "set", "pstack"], UPSTREAM);
-	} else {
+	} else if (!pin) {
 		git(["fetch", "--depth", "1", "origin", "main"], UPSTREAM);
 		git(["reset", "--hard", "FETCH_HEAD"], UPSTREAM);
+	}
+	if (pin) {
+		// The manifest records a short sha, which git resolves only against local history.
+		const shallow = git(["rev-parse", "--is-shallow-repository"], UPSTREAM) === "true";
+		git(["fetch", "--filter=blob:none", ...(shallow ? ["--unshallow"] : []), "origin", "main"], UPSTREAM);
+		git(["checkout", "--quiet", "--detach", pin], UPSTREAM);
 	}
 	return git(["rev-parse", "HEAD"], UPSTREAM);
 }
@@ -98,12 +111,13 @@ function convertText(text) {
 }
 
 function previousSha() {
-	const manifest = join(OUT, ".claude-plugin", "plugin.json");
+	const manifest = join(PLUGIN, ".claude-plugin", "plugin.json");
 	return existsSync(manifest) ? JSON.parse(readFileSync(manifest, "utf8")).version.split("+")[1].split(".")[0] : null;
 }
 
 const before = previousSha();
-const sha = syncUpstream();
+if (CHECK && !before) throw new Error("--check needs a generated plugin/ to compare against");
+const sha = syncUpstream(CHECK ? before : null);
 const upstreamManifest = JSON.parse(readFileSync(join(SRC, ".cursor-plugin", "plugin.json"), "utf8"));
 
 rmSync(OUT, { recursive: true, force: true });
@@ -120,8 +134,7 @@ for (const file of walk(OUT)) {
 		const dir = basename(dirname(file));
 		text = text.replace(/^name: .*$/m, `name: ${dir}`);
 		if (!dir.startsWith("principle-")) text += ADAPTER_NOTE;
-		// The reminder hook can only trigger a skill the model is allowed to invoke.
-		if (dir === "poteto-mode") text = text.replace(/^disable-model-invocation: true\n/m, "");
+		if (MODEL_INVOKED.includes(dir)) text = text.replace(/^disable-model-invocation: true\n/m, "");
 	} else if (rel.startsWith("agents/")) {
 		text = text.replace(/^is_background: /m, "background: ") + AGENT_NOTE;
 	}
@@ -170,19 +183,38 @@ const residuals = walk(OUT)
 	.flatMap((f) =>
 		readFileSync(f, "utf8")
 			.split("\n")
-			.map((line, i) => ({ line, at: `${relative(ROOT, f)}:${i + 1}` }))
+			.map((line, i) => ({ line, at: `${join("plugin", relative(OUT, f))}:${i + 1}` }))
 			.filter(({ line }) => RESIDUAL.test(line)),
 	);
 
-console.log(`pstack ${upstreamManifest.version} @ ${sha.slice(0, 7)} -> ${relative(process.cwd(), OUT) || "."}`);
+console.log(`pstack ${upstreamManifest.version} @ ${sha.slice(0, 7)} -> ${CHECK ? "temp dir" : relative(process.cwd(), OUT) || "."}`);
 if (before && !sha.startsWith(before)) console.log(`upstream changes: ${REPO}/compare/${before}...${sha.slice(0, 7)}`);
 if (before && sha.startsWith(before)) console.log("upstream unchanged");
 console.log(`residual Cursor references: ${residuals.length}`);
 for (const { at, line } of residuals) console.log(`  ${at}  ${line.trim().slice(0, 140)}`);
 
-// Claude Code runs a cached copy of the plugin, not ./plugin, so push the regenerated version into it.
-try {
-	execFileSync("claude", ["plugin", "update", "pstack@pstack-claude"], { stdio: "inherit" });
-} catch {
-	console.log("plugin update failed, run: claude plugin update pstack@pstack-claude");
+// A strip that stops matching (upstream reformats the flag) would leave these skills blocked without any error.
+const stillBlocked = MODEL_INVOKED.filter((dir) =>
+	/^disable-model-invocation:/m.test(readFileSync(join(OUT, "skills", dir, "SKILL.md"), "utf8").split("\n---")[0]),
+);
+if (stillBlocked.length) console.log(`still user-invocable only: ${stillBlocked.join(", ")}`);
+let failed = residuals.length > 0 || stillBlocked.length > 0;
+
+if (CHECK) {
+	try {
+		execFileSync("git", ["diff", "--no-index", "--stat", "--", PLUGIN, OUT], { stdio: "inherit" });
+		console.log("plugin/ matches convert.mjs output");
+	} catch {
+		console.log("plugin/ does not match convert.mjs output, run `node convert.mjs` and commit plugin/");
+		failed = true;
+	}
+	rmSync(OUT, { recursive: true, force: true });
+} else {
+	// Claude Code runs a cached copy of the plugin, not ./plugin, so push the regenerated version into it.
+	try {
+		execFileSync("claude", ["plugin", "update", "pstack@pstack-claude"], { stdio: "inherit" });
+	} catch {
+		console.log("plugin update failed, run: claude plugin update pstack@pstack-claude");
+	}
 }
+if (failed) process.exitCode = 1;
