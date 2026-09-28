@@ -204,8 +204,8 @@ let failed = residuals.length > 0 || stillBlocked.length > 0;
 
 if (CHECK) {
 	// Compare what git would commit, so ignored files such as .DS_Store under plugin/ do not count.
-	const committed = git(["ls-files", "--cached", "--others", "--exclude-standard", "--", "plugin"], ROOT)
-		.split("\n")
+	const committed = git(["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "plugin"], ROOT)
+		.split("\0")
 		.filter(Boolean)
 		.map((f) => relative("plugin", f));
 	const generated = walk(OUT).map((f) => relative(OUT, f));

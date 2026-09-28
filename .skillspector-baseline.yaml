@@ -6,8 +6,8 @@ version: 2
 # until someone reads it and either adds a rule here or keeps the old plugin/.
 # Rules match on id + path + excerpt text, not line numbers, so unrelated upstream edits
 # do not re-flag them. Each skill is scanned on its own, so `path` is relative to it and
-# a rule on "SKILL.md" covers that path in every skill. Built against SkillSpector v2.12.0;
-# re-review the scan when the pin changes.
+# a rule on "SKILL.md" covers that path in every skill. Re-review the scan whenever the
+# SkillSpector pin changes.
 # Docs: https://github.com/NVIDIA/SkillSpector/blob/main/docs/SUPPRESSION.md
 rules:
   # RA2 "Session Persistence" fires on the imperative "write"/"create" in ordinary

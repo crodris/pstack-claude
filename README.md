@@ -38,7 +38,7 @@ It also moves `.upstream/` to that commit, and the next plain `node convert.mjs`
 `bin/scan-skills.sh` scans every skill in `plugin/skills` with [NVIDIA SkillSpector](https://github.com/NVIDIA/SkillSpector).
 The findings in `.skillspector-baseline.yaml` are upstream pstack text that was reviewed and accepted, so a failure after `node convert.mjs` means upstream added something new.
 Read it, then add a rule with a reason or leave the update out.
-Install the SkillSpector version CI pins, `bin/scan-skills.sh` prints the command when it is missing.
+When SkillSpector is missing, `bin/scan-skills.sh` prints the command that installs the version CI pins.
 
 ## Layout
 

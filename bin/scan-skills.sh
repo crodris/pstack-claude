@@ -97,9 +97,10 @@ for issue in active:
 sys.exit(3 if active else 0)
 PY
 )" && assess_status=0 || assess_status=$?
-    echo "$summary"
+    [ -n "$summary" ] && echo "$summary"
     if [ "$assess_status" -ne 0 ] && [ "$assess_status" -ne 3 ]; then
       echo "ERROR: could not read the SkillSpector report for $skill" >&2
+      [ -n "${REPORT_DIR:-}" ] && cp "$json" "$REPORT_DIR/$skill.json"
       crashes=$((crashes + 1))
       rm -f "$json"
       continue
@@ -172,8 +173,8 @@ if [ "$failures" -gt 0 ] || [ "$crashes" -gt 0 ]; then
     echo "reason to .skillspector-baseline.yaml." >&2
   fi
   if [ "$crashes" -gt 0 ]; then
-    echo "FAIL: the scanner crashed on $crashes skill(s); those skills were NOT" >&2
-    echo "assessed. Check the install and provider credentials, then re-run." >&2
+    echo "FAIL: SkillSpector crashed or wrote an unreadable report on $crashes skill(s);" >&2
+    echo "those skills were NOT assessed. The ERROR lines above name each one." >&2
   fi
   exit 1
 fi
