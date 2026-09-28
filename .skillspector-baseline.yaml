@@ -1,0 +1,170 @@
+version: 2
+
+# Reviewed findings in the generated plugin/skills, accepted as false positives or as
+# upstream pstack policy. The skill text is cursor/plugins pstack after convert.mjs, so
+# a finding here is upstream's wording. A new finding after an upstream pull fails CI
+# until someone reads it and either adds a rule here or keeps the old plugin/.
+# Rules match on id + path + excerpt text, not line numbers, so unrelated upstream edits
+# do not re-flag them. Each skill is scanned on its own, so `path` is relative to it and
+# a rule on "SKILL.md" covers that path in every skill. Re-review the scan whenever the
+# SkillSpector pin changes.
+# Docs: https://github.com/NVIDIA/SkillSpector/blob/main/docs/SUPPRESSION.md
+rules:
+  # RA2 "Session Persistence" fires on the imperative "write"/"create" in ordinary
+  # prose instructions. None of these define cron jobs, startup scripts, or state files.
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write code\" or \"review pr\"*"
+    reason: "automate-me: example task names in a mode-skill template."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write a script or test that runs the real code*"
+    reason: "blast-radius: tells the agent to prove a change with a test."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*create a verification skill*"
+    reason: "create-verification-skill: the skill's own heading."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write the designed phase list down*"
+    reason: "figure-it-out: writes a plan for the human to review."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "write it.*output format*"
+    reason: "how: output instructions for an explainer."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write one clear paragraph*"
+    reason: "interrogate: writes an intent summary before spawning reviewers."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write the throughput checkpoint*"
+    reason: "poteto-mode: a todo checkpoint inside the current task."
+  - id: "RA2"
+    path: "playbooks/eval.md"
+    message: "*write the rubric*"
+    reason: "poteto-mode eval playbook: a judging rubric for one eval run."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write the brief to the contract below*"
+    reason: "recall: output format for a chat-history summary."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write a tight digest of the session*"
+    reason: "reflect: summarizes the session for reviewer subagents."
+  - id: "RA2"
+    path: "references/*-reviewer.md"
+    message: "*write code, edit skills, or commit*"
+    reason: "reflect reviewer prompts: the sentence forbids writing code or editing skills."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write `~/.claude/rules/pstack-models.md`*"
+    reason: >-
+      setup-pstack: writes the user's pstack model config when the user runs
+      /pstack:setup-pstack. That rule file is the intended, user-requested output.
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write each entry the way you'd tell a teammate*"
+    reason: "show-me-your-work: style guidance for a decision log the user asked for."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*create one from scratch just to satisfy the workflow*"
+    reason: "tdd: tells the agent not to create a test harness needlessly."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write every response through the*"
+    reason: "teach: reply style guidance."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write the real symbol, file, flag, or command name*"
+    reason: "technical-writing: prose style guidance."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write to let the point stand on its own*"
+    reason: "unslop: prose style guidance."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "write the confidence language*"
+    reason: "why: output instructions for a synthesizer."
+
+  # AS1/AS3 fire on paths to skill files. convert.mjs rewrites upstream's `.cursor/`
+  # paths to `.claude/`, so these point at Claude Code skill directories.
+  - id: "AS3"
+    path: "SKILL.md"
+    message: "*personal category directory (`.claude/skills*"
+    reason: "automate-me: checks for an existing mode skill before writing a new one the user asked for."
+  - id: "AS1"
+    path: "SKILL.md"
+    message: "*find the verification skill to maintain*"
+    reason: "maintain-verification-skill: locates the project's own verification skill to update it."
+  - id: "AS3"
+    path: "SKILL.md"
+    message: "*find the verification skill to maintain*"
+    reason: "maintain-verification-skill: same lookup as the AS1 rule above."
+  - id: "AS3"
+    path: "playbooks/multi-phase-plan.md"
+    message: "skills/*/skill.md"
+    reason: "poteto-mode multi-phase plan: references to sibling pstack skills (swarm, how, interrogate, show-me-your-work) by path."
+  - id: "AS3"
+    path: "references/*-reviewer.md"
+    message: "*against any `skill.md` file (workspace `.claude/skills/`*"
+    reason: "reflect reviewer prompts: reviewers check proposed edits against existing skills and propose, never apply, changes."
+
+  # Upstream policy, reviewed and accepted by installing pstack.
+  - id: "EA2"
+    path: "SKILL.md"
+    message: "without asking"
+    reason: >-
+      poteto-mode's Autonomy section lets reversible work proceed without asking and
+      lists irreversible writes that always pause. automate-me uses the phrase as a
+      section heading for the user's own autonomy preferences. The finding text is only
+      the phrase, so this rule hides "without asking" in every SKILL.md, including new
+      upstream uses; re-read the upstream diff for the phrase when pulling.
+  - id: "TM1"
+    path: "playbooks/autopilot-full.md"
+    message: "git push --force"
+    reason: >-
+      Publishes a rebase of the agent's own branch with `git push --force-with-lease`
+      after an `ls-remote` check, and says never to force-push a shared branch.
+  - id: "TM1"
+    path: "playbooks/babysit.md"
+    message: "git push --force"
+    reason: "The owner publishes its own rebase with `git push --force-with-lease`, per autopilot-full."
+  - id: "TM1"
+    path: "playbooks/opening-a-pr.md"
+    message: "git reset --hard"
+    reason: "opening-a-pr: `git fetch && git reset --hard origin/<branch>` resyncs a worktree between agent calls on the same branch."
+  - id: "SC1"
+    path: "scripts/package.json"
+    message: "*\"latest\"*"
+    reason: >-
+      poteto-mode's optional orchestration scripts pin `bun-types` and `typescript`
+      devDependencies to "latest" upstream. The plugin never installs them; they run
+      only if the user runs those scripts with bun.
+  - id: "LP3"
+    path: "SKILL.md"
+    reason: >-
+      Missing `permissions` field, reported for poteto-mode. Claude Code skills have no
+      such field, so this rule applies to every skill.
+
+  # Pattern misfires.
+  - id: "MP3"
+    path: "references/feature-map-example/README.md"
+    message: "clear state"
+    reason: "create-verification-skill example feature map: an app feature that clears its own state."
+  - id: "MP3"
+    path: "SKILL.md"
+    message: "delete history"
+    reason: "show-me-your-work: the rule says never edit or delete history (append-only log)."
+  - id: "RA1"
+    path: "references/*-reviewer.md"
+    message: "edit skill"
+    reason: "reflect reviewer prompts: \"do not write code, edit skills, or commit\"."
+  - id: "TR2"
+    path: "SKILL.md"
+    message: "*conflicts with built-in command 'commit'*"
+    reason: "technical-writing: its description mentions writing commit messages; it defines no /commit command."
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "*references/patterns.md*"
+    reason: "typescript-best-practices: the scanner did not fully read references/patterns.md, which is plain TypeScript guidance."

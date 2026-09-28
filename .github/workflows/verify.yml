@@ -1,0 +1,59 @@
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  converter:
+    name: Converter output is current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: node convert.mjs --check
+
+  validate:
+    name: Plugin manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned so a CLI release cannot change what passes here.
+      - run: npm install -g @anthropic-ai/claude-code@2.1.284
+      - run: claude plugin validate --strict .
+      - run: claude plugin validate --strict plugin
+
+  skillspector:
+    name: Scan plugin skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Install SkillSpector
+        run: |
+          # Pinned so scan results change only when this line does. Bump it together with the
+          # install line in bin/scan-skills.sh, and re-baseline if findings shift.
+          uv tool install git+https://github.com/NVIDIA/skillspector.git@c7958a3268d9498644b22edb75d0f051bbc8cbfc # v2.12.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Scan skills (fail on non-suppressed findings)
+        env:
+          # The LLM stage runs when the secret is set and falls back to static-only otherwise.
+          SKILLSPECTOR_PROVIDER: anthropic
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SKILLSPECTOR_LLM: ${{ secrets.ANTHROPIC_API_KEY != '' && '1' || '0' }}
+        run: REPORT_DIR=skillspector-reports bin/scan-skills.sh
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: skillspector-reports
+          path: skillspector-reports/
+          if-no-files-found: ignore

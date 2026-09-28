@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# inheritance keeps the settings made in the CodeRabbit web app; without it,
+# anything this file does not set falls back to CodeRabbit's defaults.
+# Incremental review is off so the bot reviews once per pull request. The ship
+# skill reads this line, confirms fix pushes with its reviewer subagents, and
+# posts `@coderabbitai review` after fixing a critical or major the bot raised.
+inheritance: true
+reviews:
+  auto_review:
+    auto_incremental_review: false
