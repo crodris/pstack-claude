@@ -38,7 +38,7 @@ rules:
     reason: "correct: its description orders the fixes, with docs as the last resort."
   - id: "RA2"
     path: "SKILL.md"
-    message: "*write a skill for*"
+    message: "*write a skill for <workflow>*"
     reason: "poteto-help: an example command that runs the skill-authoring playbook."
   - id: "RA2"
     path: "SKILL.md"

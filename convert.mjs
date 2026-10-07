@@ -54,11 +54,12 @@ const REPLACEMENTS = [
 	[/subagent_type: "Comment Sicko"/g, 'subagent_type: "pstack:Comment Sicko"'],
 
 	// Models. Claude Code subagents run Claude only, so the cross-vendor panel maps by role:
-	// upstream's strongest Claude slot to fable, gpt to opus, grok to sonnet. Matches the overlay's `unlimited` shape.
+	// upstream's strongest Claude slot to fable, gpt to opus, grok to sonnet. Upstream dropped gpt from its
+	// panels, so the generated defaults are `fable, sonnet` while the overlay's `unlimited` shape keeps opus too.
 	[/claude-opus-[\d-]+[a-z]+/g, "fable"],
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
-	[/Families go by prefix: `claude-\*`(?:, `gpt-\*`,)? and `grok-\*`\. With no family match, use /g, "Under Claude Code that means "],
+	[/Families go by prefix: `claude-\*` and `grok-\*`\. With no family match, use /g, "Under Claude Code that means "],
 ];
 
 const ADAPTER_NOTE = `
@@ -72,6 +73,16 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 - **Missing Cursor skills.** \`cursor-team-kit\` is not installed. For \`/deslop\` use \`/simplify\`. For \`control-ui\` drive the app with whatever browser automation tools are available. For \`control-cli\` use Bash. For Cursor's built-in \`create-skill\` use any installed skill-authoring skill.
 - **Bugbot.** Guidance about Bugbot applies to whatever review bot comments on the PR (CodeRabbit, etc.).
 `;
+
+// Extra translations for one skill, appended after ADAPTER_NOTE. poteto-help answers setup and mode
+// questions for a Cursor install and links docs this plugin does not ship.
+const SKILL_NOTES = {
+	"poteto-help": `- **Install.** Run \`claude plugin install pstack@pstack-claude\`. Skills run as \`/pstack:<name>\`.
+- **Modes.** Claude Code has no Custom Modes. A \`UserPromptSubmit\` hook reminds Claude to invoke \`poteto-mode\` for each coding task, and \`poteto-mode\` and \`unslop\` also load without a slash command. Plan Mode means Claude Code's plan mode.
+- **Guide pages.** The README and \`docs/guide\` pages are not shipped with this plugin. Read them upstream at https://github.com/cursor/plugins/tree/main/pstack.
+- **Not ported.** \`/make-bot-ui\` needs Cursor Automations and is not in this plugin.
+`,
+};
 
 // Port of upstream's Cursor-only `reminder:` frontmatter. Narrowed to coding tasks so questions stay cheap.
 const REMINDER =
@@ -135,7 +146,7 @@ for (const file of walk(OUT)) {
 		// Claude Code derives the slash command from the directory, keep `name` in step with it.
 		const dir = basename(dirname(file));
 		text = text.replace(/^name: .*$/m, `name: ${dir}`);
-		if (!dir.startsWith("principle-")) text += ADAPTER_NOTE;
+		if (!dir.startsWith("principle-")) text += ADAPTER_NOTE + (SKILL_NOTES[dir] ?? "");
 		if (MODEL_INVOKED.includes(dir)) text = text.replace(/^disable-model-invocation: true\n/m, "");
 	} else if (rel.startsWith("agents/")) {
 		text = text.replace(/^is_background: /m, "background: ") + AGENT_NOTE;

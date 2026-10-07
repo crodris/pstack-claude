@@ -161,3 +161,7 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 - **Models.** Agent `model` accepts only `fable`, `opus`, `sonnet`, `haiku`. Per-role overrides live in `~/.claude/rules/pstack-models.md` (written by `/pstack:setup-pstack`). A value of `inherit-parent` or `auto` means omit `model`.
 - **Missing Cursor skills.** `cursor-team-kit` is not installed. For `/deslop` use `/simplify`. For `control-ui` drive the app with whatever browser automation tools are available. For `control-cli` use Bash. For Cursor's built-in `create-skill` use any installed skill-authoring skill.
 - **Bugbot.** Guidance about Bugbot applies to whatever review bot comments on the PR (CodeRabbit, etc.).
+- **Install.** Run `claude plugin install pstack@pstack-claude`. Skills run as `/pstack:<name>`.
+- **Modes.** Claude Code has no Custom Modes. A `UserPromptSubmit` hook reminds Claude to invoke `poteto-mode` for each coding task, and `poteto-mode` and `unslop` also load without a slash command. Plan Mode means Claude Code's plan mode.
+- **Guide pages.** The README and `docs/guide` pages are not shipped with this plugin. Read them upstream at https://github.com/cursor/plugins/tree/main/pstack.
+- **Not ported.** `/make-bot-ui` needs Cursor Automations and is not in this plugin.
