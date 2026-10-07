@@ -13,7 +13,8 @@ Valid values are the Agent tool's `model` aliases (`fable`, `opus`, `sonnet`, `h
 
 ### 1. Load current state
 
-If `~/.claude/rules/pstack-models.md` exists, read it and treat its `# budget` line and role values as the current choices. Otherwise start from the `unlimited` shape in step 4. A line whose role is not in step 4, such as `how critics`, is from a retired role. Drop it.
+If `~/.claude/rules/pstack-models.md` exists, read it and treat its `# budget` line and role values as the current choices. Otherwise start from the `unlimited` shape in step 4. A line whose role is not in step 4 and does not start with `cursor`, such as `how critics`, is from a retired role. Drop it.
+Keep every line whose role starts with `cursor`, such as `cursor default`, unchanged. Those lines set Cursor CLI models for the user's own `cursor` skill, and no budget changes them.
 
 ### 2. Budget
 
@@ -39,11 +40,11 @@ On a re-run, keep any role the user changed by hand. `inherit-parent` and `auto`
 
 ### 3. Show the roles and confirm
 
-Show every role with its model. Also list each line step 1 dropped. Ask whether to accept as-is or change specific roles. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list and one subagent runs per entry, so the list length sets the fan-out and the cost. `arena cross-judge pool` is a list Arena picks one value from. `swarm workers` is the default for every worker unless a race assigns a model per arm.
+Show every role with its model. Also list each line step 1 dropped, and each `cursor` line it kept unchanged. Ask whether to accept as-is or change specific roles. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list and one subagent runs per entry, so the list length sets the fan-out and the cost. `arena cross-judge pool` is a list Arena picks one value from. `swarm workers` is the default for every worker unless a race assigns a model per arm.
 
 ### 4. Write the rule
 
-Overwrite the whole file so re-runs stay idempotent. Shape:
+Overwrite the whole file so re-runs stay idempotent. Write the `cursor` lines from step 1 after the pstack roles. Shape:
 
 ```
 # pstack model configuration. One line per role. Delete a line to fall back to the skill default.
