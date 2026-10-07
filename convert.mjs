@@ -77,8 +77,8 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 // Extra translations for one skill, appended after ADAPTER_NOTE. poteto-help answers setup and mode
 // questions for a Cursor install and links docs this plugin does not ship.
 const SKILL_NOTES = {
-	"poteto-help": `- **Install.** Run \`claude plugin install pstack@pstack-claude\`. Skills run as \`/pstack:<name>\`.
-- **Modes.** Claude Code has no Custom Modes. A \`UserPromptSubmit\` hook reminds Claude to invoke \`poteto-mode\` for each coding task, and \`poteto-mode\` and \`unslop\` also load without a slash command. Plan Mode means Claude Code's plan mode.
+	"poteto-help": `- **Install.** Run \`claude plugin marketplace add <path to a pstack-claude checkout>\`, then \`claude plugin install pstack@pstack-claude\`. Skills run as \`/pstack:<name>\`.
+- **Modes.** Claude Code has no Custom Modes, so skip the Enter, Option+Enter, and Use as Mode steps above. A \`UserPromptSubmit\` hook reminds Claude to invoke \`poteto-mode\` for each coding task and to skip general questions, and \`poteto-mode\` and \`unslop\` also load without a slash command. When the mode stopped applying, the turn probably read as a general question: type \`/pstack:poteto-mode\` to start it. Plan Mode means Claude Code's plan mode.
 - **Guide pages.** The README and \`docs/guide\` pages are not shipped with this plugin. Read them upstream at https://github.com/cursor/plugins/tree/main/pstack.
 - **Not ported.** \`/make-bot-ui\` needs Cursor Automations and is not in this plugin.
 `,
@@ -211,7 +211,10 @@ const stillBlocked = MODEL_INVOKED.filter((dir) =>
 	/^disable-model-invocation:/m.test(readFileSync(join(OUT, "skills", dir, "SKILL.md"), "utf8").split("\n---")[0]),
 );
 if (stillBlocked.length) console.log(`still user-invocable only: ${stillBlocked.join(", ")}`);
-let failed = residuals.length > 0 || stillBlocked.length > 0;
+// A SKILL_NOTES key that no longer names a skill (upstream renamed or removed it) would drop its note silently.
+const orphanNotes = Object.keys(SKILL_NOTES).filter((dir) => !existsSync(join(OUT, "skills", dir, "SKILL.md")));
+if (orphanNotes.length) console.log(`SKILL_NOTES for missing skills: ${orphanNotes.join(", ")}`);
+let failed = residuals.length > 0 || stillBlocked.length > 0 || orphanNotes.length > 0;
 
 if (CHECK) {
 	// Compare what git would commit, so ignored files such as .DS_Store under plugin/ do not count.

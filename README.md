@@ -42,7 +42,7 @@ When SkillSpector is missing, `bin/scan-skills.sh` prints the command that insta
 
 ## Layout
 
-- `convert.mjs` - the whole port: replacement table, adapter note appended to each skill, residual report, `--check` mode.
+- `convert.mjs` - the whole port: replacement table, adapter note appended to each skill, per-skill notes (`SKILL_NOTES`), residual report, `--check` mode.
 - `bin/scan-skills.sh` and `.skillspector-baseline.yaml` - SkillSpector scan of the generated skills and its reviewed findings.
 - `overlays/` - files copied over the generated output. Only `setup-pstack`, whose model-budget logic is specific to Cursor model slugs.
 - `plugin/` - generated Claude Code plugin.
@@ -66,5 +66,5 @@ Direct: `/pstack:how`, `/pstack:why`, `/pstack:architect`, `/pstack:arena`, `/ps
 ## Not ported
 
 - `make-bot-ui` and `automations/benny` depend on Cursor Automations webhooks.
-- Cross-vendor model panels. Claude Code subagents run Claude only, so panels are `fable, opus, sonnet`.
+- Cross-vendor model panels. Claude Code subagents run Claude only, so the generated panel defaults are `fable, sonnet`, and the `unlimited` budget in `setup-pstack` uses `fable, opus, sonnet`.
 - Cloud worker environment. Workers run locally in worktrees.
