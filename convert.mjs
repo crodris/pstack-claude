@@ -58,7 +58,7 @@ const REPLACEMENTS = [
 	[/claude-opus-[\d-]+[a-z]+/g, "fable"],
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
-	[/Families go by prefix: `claude-\*`, `gpt-\*`, and `grok-\*`\. With no family match, use /g, "Under Claude Code that means "],
+	[/Families go by prefix: `claude-\*`(?:, `gpt-\*`,)? and `grok-\*`\. With no family match, use /g, "Under Claude Code that means "],
 ];
 
 const ADAPTER_NOTE = `
