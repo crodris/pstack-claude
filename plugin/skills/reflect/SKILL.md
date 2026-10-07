@@ -35,7 +35,7 @@ Each reviewer and the synthesizer name a role line in the `~/.claude/rules/pstac
 | Lens | Role line | Default `model` | Prompt template |
 |---|---|---|---|
 | Judgment | `reflect judgment, divergent, synthesizer` | `fable` | `references/judgment-reviewer.md` |
-| Tooling | `reflect tooling` | `opus` | `references/tooling-reviewer.md` |
+| Tooling | `reflect tooling` | `sonnet` | `references/tooling-reviewer.md` |
 | Divergent | `reflect judgment, divergent, synthesizer` | `fable` | `references/divergent-reviewer.md` |
 
 Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Agent` response body.

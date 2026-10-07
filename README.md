@@ -17,7 +17,7 @@ The version is `<upstream version>+<upstream sha>.<content hash>`, so a `convert
 
 Residual count above 0 means upstream added a Cursor-ism the table does not cover.
 Add a row to `REPLACEMENTS` in `convert.mjs` and re-run.
-The run exits 1 when residuals remain or when a skill in `MODEL_INVOKED` still carries `disable-model-invocation`.
+The run exits 1 when residuals remain, when a skill in `MODEL_INVOKED` still carries `disable-model-invocation`, or when a `SKILL_NOTES` key names a skill that no longer exists.
 
 ## Checks
 
@@ -42,7 +42,7 @@ When SkillSpector is missing, `bin/scan-skills.sh` prints the command that insta
 
 ## Layout
 
-- `convert.mjs` - the whole port: replacement table, adapter note appended to each skill, residual report, `--check` mode.
+- `convert.mjs` - the whole port: replacement table, adapter note appended to each skill, per-skill notes (`SKILL_NOTES`), residual report, `--check` mode.
 - `bin/scan-skills.sh` and `.skillspector-baseline.yaml` - SkillSpector scan of the generated skills and its reviewed findings.
 - `overlays/` - files copied over the generated output. Only `setup-pstack`, whose model-budget logic is specific to Cursor model slugs.
 - `plugin/` - generated Claude Code plugin.
@@ -66,5 +66,5 @@ Direct: `/pstack:how`, `/pstack:why`, `/pstack:architect`, `/pstack:arena`, `/ps
 ## Not ported
 
 - `make-bot-ui` and `automations/benny` depend on Cursor Automations webhooks.
-- Cross-vendor model panels. Claude Code subagents run Claude only, so panels are `fable, opus, sonnet`.
+- Cross-vendor model panels. Claude Code subagents run Claude only, so the generated panel defaults are `fable, sonnet`, and the `unlimited` budget in `setup-pstack` uses `fable, opus, sonnet`.
 - Cloud worker environment. Workers run locally in worktrees.
