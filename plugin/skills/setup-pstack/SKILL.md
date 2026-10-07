@@ -14,6 +14,7 @@ Valid values are the Agent tool's `model` aliases (`fable`, `opus`, `sonnet`, `h
 ### 1. Load current state
 
 If `~/.claude/rules/pstack-models.md` exists, read it and treat its `# budget` line and role values as the current choices. Otherwise start from the `unlimited` shape in step 4. A line whose role is not in step 4, such as `how critics`, is from a retired role. Drop it.
+Keep every line whose role starts with `cursor`, such as `cursor default`, unchanged. Those lines set Cursor CLI models for the user's own `cursor` skill, and no budget changes them.
 
 ### 2. Budget
 
@@ -43,7 +44,7 @@ Show every role with its model. Also list each line step 1 dropped. Ask whether 
 
 ### 4. Write the rule
 
-Overwrite the whole file so re-runs stay idempotent. Shape:
+Overwrite the whole file so re-runs stay idempotent. Write the `cursor` lines from step 1 after the pstack roles. Shape:
 
 ```
 # pstack model configuration. One line per role. Delete a line to fall back to the skill default.
