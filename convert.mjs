@@ -78,7 +78,7 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 // questions for a Cursor install and links docs this plugin does not ship.
 const SKILL_NOTES = {
 	"poteto-help": `- **Install.** Run \`claude plugin marketplace add <path to a pstack-claude checkout>\`, then \`claude plugin install pstack@pstack-claude\`. Skills run as \`/pstack:<name>\`.
-- **Modes.** Claude Code has no Custom Modes, so skip the Enter, Option+Enter, and Use as Mode steps above. A \`UserPromptSubmit\` hook reminds Claude to invoke \`poteto-mode\` for each coding task and to skip general questions, and \`poteto-mode\` and \`unslop\` also load without a slash command. When the mode stopped applying, the turn probably read as a general question: type \`/pstack:poteto-mode\` to start it. Plan Mode means Claude Code's plan mode.
+- **Modes.** Claude Code has no Custom Modes, so ignore every Custom Mode instruction above: Enter, Option+Enter, Use as Mode, mentioning a Custom Mode, and the fix-table advice to start one. A \`UserPromptSubmit\` hook reminds Claude to invoke \`poteto-mode\` once per coding task and to skip general questions and turns where the user opts out, and \`poteto-mode\` and \`unslop\` also load without a slash command. When the mode stopped applying, the turn read as a general question, the task already invoked it once, or the user opted out: type \`/pstack:poteto-mode\` to start it again. Plan Mode means Claude Code's plan mode.
 - **Guide pages.** The README and \`docs/guide\` pages are not shipped with this plugin. Read them upstream at https://github.com/cursor/plugins/tree/main/pstack.
 - **Not ported.** \`/make-bot-ui\` needs Cursor Automations and is not in this plugin.
 `,
