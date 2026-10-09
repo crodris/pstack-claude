@@ -60,8 +60,87 @@ claude plugin install pstack@pstack-claude
 Entry point is `/pstack:poteto-mode`.
 It also auto-triggers: a `UserPromptSubmit` hook (`plugin/hooks/hooks.json`) reminds Claude each turn to invoke it for coding tasks and skip it for general questions.
 Tune the wording via `REMINDER` in `convert.mjs`. Say "no poteto" in a prompt to opt out for a task.
-Direct: `/pstack:how`, `/pstack:why`, `/pstack:architect`, `/pstack:arena`, `/pstack:interrogate`, `/pstack:unslop`.
-`/pstack:setup-pstack` sets the model per role in `~/.claude/rules/pstack-models.md`.
+
+## Skills
+
+Upstream's [README](https://github.com/cursor/plugins/tree/main/pstack#skills) has longer descriptions and the list of `poteto-mode` playbooks.
+
+### You invoke these
+
+These load only when you type them, as `/pstack:<name>`.
+
+| Skill | Use it when | How it works |
+|---|---|---|
+| [`architect`](plugin/skills/architect/SKILL.md) | You are about to write code that crosses a function boundary. | Sketches the caller's usage, types, and module shape before any code, using parallel design runners. Then it stays in the loop while the implementation fills in. |
+| [`arena`](plugin/skills/arena/SKILL.md) | One attempt at a non-trivial artifact could lock in the wrong shape. | Spawns N parallel candidates for the same task, picks a base, and grafts the strongest parts of the others into it. |
+| [`automate-me`](plugin/skills/automate-me/SKILL.md) | You want your own `-mode` skill that captures how you work. | Drafts or revises a personal mode skill from your preferences and, optionally, your recent chat transcripts. |
+| [`benchmark-checklist`](plugin/skills/benchmark-checklist/SKILL.md) | You measured a speedup or regression. | Vets the number before you report it: what limits it, tuning, errors, repeat runs, and whether the work actually ran. |
+| [`blast-radius`](plugin/skills/blast-radius/SKILL.md) | A small change might break something outside the diff. | Traces what else the change touches, then runs real code to prove the one fact the change is safe because of. |
+| [`bro`](plugin/skills/bro/SKILL.md) | The last reply was too dense. | Restates it in plain language with no jargon. |
+| [`correct`](plugin/skills/correct/SKILL.md) | You keep correcting agents for the same mistake. | Finds repeated mistake classes in the repo history and makes each one impossible: architecture first, then types, a lint, a test, and docs last. It proves each check fails on a real past mistake. |
+| [`create-verification-skill`](plugin/skills/create-verification-skill/SKILL.md) | Your project has no scripted way to prove app behavior. | Generates a project-local verify skill with a feature map that drives your app like a user, for any language or platform. |
+| [`figure-it-out`](plugin/skills/figure-it-out/SKILL.md) | No `poteto-mode` playbook fits, such as a large migration. | Designs an auditable playbook for the task, runs a hypothesis loop, and logs decisions with `show-me-your-work`. |
+| [`how`](plugin/skills/how/SKILL.md) | You want a walkthrough of how a subsystem works, or where code should live. | An explorer subagent maps the code, and an explainer subagent writes the walkthrough. |
+| [`interrogate`](plugin/skills/interrogate/SKILL.md) | You have a diff and want it challenged before review. | Several reviewer subagents on different models attack the diff from independent angles, including a strict code-quality lens. A lead judges the findings. |
+| [`maintain-verification-skill`](plugin/skills/maintain-verification-skill/SKILL.md) | Your verify skill's feature map no longer matches the app. | Parallel readers check the source for each feature, one live session drives every feature, and the result is at most one PR of proven fixes. |
+| [`no-comments`](plugin/skills/no-comments/SKILL.md) | You want unneeded comments removed before review. | Spawns the Comment Sicko agent, applies the findings you accept, and offers to turn claimed constraints into checks. |
+| [`poteto-help`](plugin/skills/poteto-help/SKILL.md) | You are new to pstack or unsure which skill fits. | Answers setup questions and hands you a prompt to type. |
+| [`recall`](plugin/skills/recall/SKILL.md) | You are starting or resuming work. | Rebuilds your recent context from your Claude Code transcripts, the repo's live state, and shared records, then returns a short current-state brief. |
+| [`reflect`](plugin/skills/reflect/SKILL.md) | A long task finished and you want its lessons kept. | Three reviewer subagents read the transcript, and a synthesizer turns each learning into an edit on an existing skill. |
+| [`show-me-your-work`](plugin/skills/show-me-your-work/SKILL.md) | Long or unattended work needs a reviewable trail. | Logs one TSV row per decision: what, why, evidence, and result. |
+| [`swarm`](plugin/skills/swarm/SKILL.md) | You want N parallel workers across slices or races. | Fans out the workers, waits for all of them, and returns one combined report. |
+| [`tdd`](plugin/skills/tdd/SKILL.md) | You are fixing a bug that has a cheap local test path. | Writes the failing test first, then the fix. |
+| [`teach`](plugin/skills/teach/SKILL.md) | You want to understand a change or subsystem, not just get a summary. | Runs `how` and `why`, then combines them into one plain explanation built up diagram by diagram. |
+| [`technical-writing`](plugin/skills/technical-writing/SKILL.md) | You are writing docs, RFCs, READMEs, PR descriptions, or commit messages. | Applies a layered standard: Diataxis structure, Google developer style, STE rules, and Global English. |
+| [`typescript-best-practices`](plugin/skills/typescript-best-practices/SKILL.md) | You are reading or editing TypeScript. | Gives TypeScript syntax for the type-system-discipline principle. Type it before TypeScript work, because it does not load on its own. |
+| [`why`](plugin/skills/why/SKILL.md) | You want to know why something was built this way. | Finds the MCP servers you have connected, queries each evidence source in parallel (source control, issue tracker, docs, chat, observability, error tracking, analytics), and returns a cited answer. |
+
+### Claude invokes these
+
+Claude loads these on its own when they apply. You can also type them.
+
+| Skill | Use it when | How it works |
+|---|---|---|
+| [`poteto-mode`](plugin/skills/poteto-mode/SKILL.md) | Any non-trivial coding task. | A `UserPromptSubmit` hook (`plugin/hooks/hooks.json`) reminds Claude to load it once per coding task. It picks a playbook (feature, bug fix, refactor, perf, babysit, shipping, and others), reads the principles that apply, and delegates to `poteto-agent` subagents. Say "no poteto" in a prompt to skip it. |
+| [`unslop`](plugin/skills/unslop/SKILL.md) | Claude writes prose, such as a PR description or a doc. | Removes AI writing tells. Other skills, such as `poteto-mode`, call it on their prose. |
+| [`setup-pstack`](plugin/skills/setup-pstack/SKILL.md) | You want to pick which Claude model each pstack role uses. | Asks for a budget and writes `~/.claude/rules/pstack-models.md`, which loads into every session. |
+
+### Principles
+
+`poteto-mode` reads these as files when they apply and names the ones that shaped a decision.
+You can also type `/pstack:principle-<name>`.
+
+| Principle | Rule |
+|---|---|
+| [`laziness-protocol`](plugin/skills/principle-laziness-protocol/SKILL.md) | Bias toward deletion and the smallest change that solves the problem. |
+| [`foundational-thinking`](plugin/skills/principle-foundational-thinking/SKILL.md) | Get the core types and data structures right before writing logic. |
+| [`redesign-from-first-principles`](plugin/skills/principle-redesign-from-first-principles/SKILL.md) | Redesign as if a new requirement had been there from day one, instead of bolting it on. |
+| [`attack-the-premise`](plugin/skills/principle-attack-the-premise/SKILL.md) | When two fixes that share a premise fail the same check, question the premise instead of writing a third fix. |
+| [`subtract-before-you-add`](plugin/skills/principle-subtract-before-you-add/SKILL.md) | Remove dead code and redundant checks first, then build on the simpler base. |
+| [`minimize-reader-load`](plugin/skills/principle-minimize-reader-load/SKILL.md) | Collapse one-caller wrappers and shrink mutable scope so code is easy to trace. |
+| [`outcome-oriented-execution`](plugin/skills/principle-outcome-oriented-execution/SKILL.md) | In planned rewrites, move to the target architecture instead of keeping throwaway compatibility code. |
+| [`experience-first`](plugin/skills/principle-experience-first/SKILL.md) | Choose user delight over implementation convenience. |
+| [`exhaust-the-design-space`](plugin/skills/principle-exhaust-the-design-space/SKILL.md) | For a decision with no precedent, build 2-3 competing prototypes and compare them. |
+| [`build-the-lever`](plugin/skills/principle-build-the-lever/SKILL.md) | Build the tool that does or proves the work (codemod, script, generator) instead of working by hand. |
+| [`model-the-domain`](plugin/skills/principle-model-the-domain/SKILL.md) | Encode the domain in a structure instead of scattered conditionals. |
+| [`boundary-discipline`](plugin/skills/principle-boundary-discipline/SKILL.md) | Put guards at system boundaries, trust internal types, and keep business logic pure. |
+| [`type-system-discipline`](plugin/skills/principle-type-system-discipline/SKILL.md) | Make illegal states unrepresentable and parse external data at boundaries. |
+| [`make-operations-idempotent`](plugin/skills/principle-make-operations-idempotent/SKILL.md) | Reach the same end state regardless of partial earlier runs. |
+| [`migrate-callers-then-delete-legacy-apis`](plugin/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md) | Migrate callers and delete the old API in the same change. |
+| [`separate-before-serializing-shared-state`](plugin/skills/principle-separate-before-serializing-shared-state/SKILL.md) | Remove sharing between concurrent writers before adding locks or queues. |
+| [`prove-it-works`](plugin/skills/principle-prove-it-works/SKILL.md) | Verify against the real artifact before declaring done, not a proxy. |
+| [`fix-root-causes`](plugin/skills/principle-fix-root-causes/SKILL.md) | Reproduce first, then fix the root cause instead of guarding the symptom. |
+| [`sequence-verifiable-units`](plugin/skills/principle-sequence-verifiable-units/SKILL.md) | Split work into small units that each end in a check. |
+| [`test-behavior-not-implementation`](plugin/skills/principle-test-behavior-not-implementation/SKILL.md) | Call code the way its users do and assert against a literal expected value. |
+| [`explain-the-number`](plugin/skills/principle-explain-the-number/SKILL.md) | Find what limits a measured number before you trust or report it. |
+| [`guard-the-context-window`](plugin/skills/principle-guard-the-context-window/SKILL.md) | Route bulk output to subagents and keep only summaries in the main thread. |
+| [`never-block-on-the-human`](plugin/skills/principle-never-block-on-the-human/SKILL.md) | On reversible work, proceed and show the result instead of asking first. |
+| [`encode-lessons-in-structure`](plugin/skills/principle-encode-lessons-in-structure/SKILL.md) | Turn a repeated instruction into a lint, flag, runtime check, or script instead of more text. |
+
+### Agents
+
+- [`poteto-agent`](plugin/agents/poteto-agent.md) is the subagent `poteto-mode` delegates work to. It reads `poteto-mode` in full before starting.
+- [`Comment Sicko`](plugin/agents/comment-sicko.md) is the comment reviewer that `no-comments` spawns.
 
 ## Not ported
 
