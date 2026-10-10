@@ -67,7 +67,8 @@ Upstream's [README](https://github.com/cursor/plugins/tree/main/pstack#skills) h
 
 ### You invoke these
 
-These load only when you type them, as `/pstack:<name>`.
+Claude cannot load these on its own.
+You type them as `/pstack:<name>`, or another pstack skill reads them, such as `teach` running `how` and `why`.
 
 | Skill | Use it when | How it works |
 |---|---|---|
@@ -80,16 +81,16 @@ These load only when you type them, as `/pstack:<name>`.
 | [`correct`](plugin/skills/correct/SKILL.md) | You keep correcting agents for the same mistake. | Finds repeated mistake classes in the repo history and makes each one impossible: architecture first, then types, a lint, a test, and docs last. It proves each check fails on a real past mistake. |
 | [`create-verification-skill`](plugin/skills/create-verification-skill/SKILL.md) | Your project has no scripted way to prove app behavior. | Generates a project-local verify skill with a feature map that drives your app like a user, for any language or platform. |
 | [`figure-it-out`](plugin/skills/figure-it-out/SKILL.md) | No `poteto-mode` playbook fits, such as a large migration. | Designs an auditable playbook for the task, runs a hypothesis loop, and logs decisions with `show-me-your-work`. |
-| [`how`](plugin/skills/how/SKILL.md) | You want a walkthrough of how a subsystem works, or where code should live. | An explorer subagent maps the code, and an explainer subagent writes the walkthrough. |
-| [`interrogate`](plugin/skills/interrogate/SKILL.md) | You have a diff and want it challenged before review. | Several reviewer subagents on different models attack the diff from independent angles, including a strict code-quality lens. A lead judges the findings. |
+| [`how`](plugin/skills/how/SKILL.md) | You want a walkthrough of how a subsystem works, or where code should live. | For a narrow question, one explainer subagent explores and explains in one pass. For a subsystem, 2 to 4 explorer subagents map it in parallel first, then the explainer writes the walkthrough. |
+| [`interrogate`](plugin/skills/interrogate/SKILL.md) | You have a diff and want it challenged before review. | One reviewer subagent per configured model reviews the diff with the same prompt and rubric, including a strict code-quality lens. The different models give the independent angles, and a lead judges the findings. |
 | [`maintain-verification-skill`](plugin/skills/maintain-verification-skill/SKILL.md) | Your verify skill's feature map no longer matches the app. | Parallel readers check the source for each feature, one live session drives every feature, and the result is at most one PR of proven fixes. |
 | [`no-comments`](plugin/skills/no-comments/SKILL.md) | You want unneeded comments removed before review. | Spawns the Comment Sicko agent, applies the findings you accept, and offers to turn claimed constraints into checks. |
 | [`poteto-help`](plugin/skills/poteto-help/SKILL.md) | You are new to pstack or unsure which skill fits. | Answers setup questions and hands you a prompt to type. |
 | [`recall`](plugin/skills/recall/SKILL.md) | You are starting or resuming work. | Rebuilds your recent context from your Claude Code transcripts, the repo's live state, and shared records, then returns a short current-state brief. |
-| [`reflect`](plugin/skills/reflect/SKILL.md) | A long task finished and you want its lessons kept. | Three reviewer subagents read the transcript, and a synthesizer turns each learning into an edit on an existing skill. |
+| [`reflect`](plugin/skills/reflect/SKILL.md) | A long task finished and you want its lessons kept. | Three reviewer subagents read the transcript, and a synthesizer routes each learning to an edit on an existing skill. You approve which edits to apply. |
 | [`show-me-your-work`](plugin/skills/show-me-your-work/SKILL.md) | Long or unattended work needs a reviewable trail. | Logs one TSV row per decision: what, why, evidence, and result. |
 | [`swarm`](plugin/skills/swarm/SKILL.md) | You want N parallel workers across slices or races. | Fans out the workers, waits for all of them, and returns one combined report. |
-| [`tdd`](plugin/skills/tdd/SKILL.md) | You are fixing a bug that has a cheap local test path. | Writes the failing test first, then the fix. |
+| [`tdd`](plugin/skills/tdd/SKILL.md) | You ask for TDD or a regression test, or a bug has a cheap local test path. | Writes the failing test first, then the fix. |
 | [`teach`](plugin/skills/teach/SKILL.md) | You want to understand a change or subsystem, not just get a summary. | Runs `how` and `why`, then combines them into one plain explanation built up diagram by diagram. |
 | [`technical-writing`](plugin/skills/technical-writing/SKILL.md) | You are writing docs, RFCs, READMEs, PR descriptions, or commit messages. | Applies a layered standard: Diataxis structure, Google developer style, STE rules, and Global English. |
 | [`typescript-best-practices`](plugin/skills/typescript-best-practices/SKILL.md) | You are reading or editing TypeScript. | Gives TypeScript syntax for the type-system-discipline principle. Type it before TypeScript work, because it does not load on its own. |
@@ -97,7 +98,8 @@ These load only when you type them, as `/pstack:<name>`.
 
 ### Claude invokes these
 
-Claude loads these on its own when they apply. You can also type them.
+Claude loads these on its own when they apply.
+You can also type them.
 
 | Skill | Use it when | How it works |
 |---|---|---|
@@ -139,7 +141,8 @@ You can also type `/pstack:principle-<name>`.
 
 ### Agents
 
-- [`poteto-agent`](plugin/agents/poteto-agent.md) is the subagent `poteto-mode` delegates work to. It reads `poteto-mode` in full before starting.
+- [`poteto-agent`](plugin/agents/poteto-agent.md) is the subagent `poteto-mode` delegates work to.
+  It reads `poteto-mode` in full before starting.
 - [`Comment Sicko`](plugin/agents/comment-sicko.md) is the comment reviewer that `no-comments` spawns.
 
 ## Not ported
