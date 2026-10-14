@@ -35,13 +35,14 @@ const REPLACEMENTS = [
 		/with the leading slash dropped and each "\/" turned into "-" \(so `\/Users\/you\/proj` becomes `Users-you-proj`\)/g,
 		'with every non-alphanumeric character turned into "-" (so `/Users/you/proj` becomes `-Users-you-proj`)',
 	],
-	[/`agent-transcripts\/` directory/g, "transcript directory (`~/.claude/projects/<slug>/`, where `<slug>` is the absolute project path with every non-alphanumeric character turned into `-`)"],
+	[/`agent-transcripts\/` directory(?: the system prompt names)?/g, "transcript directory (`~/.claude/projects/<slug>/`, where `<slug>` is the absolute project path with every non-alphanumeric character turned into `-`)"],
 	[/\(the system prompt names (?:the|this) path/g, "(derive it from the project path"],
 	[/The system prompt names the/g, "Locate the"],
 	[/sed 's#\^\/##; s#\/#-#g'/g, "sed 's#[^A-Za-z0-9]#-#g'"],
 	[/\.cursor\/projects\/\$slug\/agent-transcripts/g, ".claude/projects/$slug"],
 	[/\.cursor\/projects\/<slugified-repo-path>\/agent-transcripts/g, ".claude/projects/<slugified-repo-path>"],
 	[/\.cursor\/(skills|plugins|projects|worktrees)\//g, ".claude/$1/"],
+	[/\.cursor-plugin\/plugin\.json/g, ".claude-plugin/plugin.json"],
 
 	// Tools
 	[/\bAskQuestion\b/g, "AskUserQuestion"],
@@ -49,6 +50,7 @@ const REPLACEMENTS = [
 	[/`Task`/g, "`Agent`"],
 	[/\bTask (tool|`model`)/g, "Agent $1"],
 	[/\bTask subagent/g, "subagent"],
+	[/\bTask spawn/g, "subagent spawn"],
 	[/^- `readonly`: .*\n/gm, ""],
 	[/subagent_type: "poteto-agent"/g, 'subagent_type: "pstack:poteto-agent"'],
 	[/subagent_type: "Comment Sicko"/g, 'subagent_type: "pstack:Comment Sicko"'],
@@ -59,7 +61,7 @@ const REPLACEMENTS = [
 	[/claude-opus-[\d-]+[a-z]+/g, "fable"],
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
-	[/Families go by prefix: `claude-\*` and `grok-\*`\. With no family match, use /g, "Under Claude Code that means "],
+	[/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. With no family match, use /g, "Under Claude Code that means "],
 ];
 
 const ADAPTER_NOTE = `
@@ -190,7 +192,7 @@ writeFileSync(
 
 // Leftover Cursor-isms mean upstream added something REPLACEMENTS does not cover yet.
 // `cursor-team-kit`, `environment:` and Bugbot are left in on purpose, ADAPTER_NOTE translates them.
-const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gpt-5|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt)|`Task`/;
+const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gpt-5|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt|spawn)|`Task`/;
 const residuals = walk(OUT)
 	.filter((f) => /\.(md|sh)$/.test(f))
 	.flatMap((f) =>

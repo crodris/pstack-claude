@@ -12,7 +12,7 @@ Invoke when the user says "reflect" or "/reflect". Skip when the conversation is
 
 ## 1. Locate the active transcript
 
-Before fanning out, find this conversation's transcript in the transcript directory (`~/.claude/projects/<slug>/`, where `<slug>` is the absolute project path with every non-alphanumeric character turned into `-`) the system prompt names. Do not glob across `~/.claude/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.
+Before fanning out, find this conversation's transcript in the transcript directory (`~/.claude/projects/<slug>/`, where `<slug>` is the absolute project path with every non-alphanumeric character turned into `-`). Do not glob across `~/.claude/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.
 
 ```bash
 ls -t <agent-transcripts>/*.jsonl <agent-transcripts>/*/*.jsonl <agent-transcripts>/*/subagents/*.jsonl 2>/dev/null | head -10
