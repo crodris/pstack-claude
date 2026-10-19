@@ -106,6 +106,18 @@ rules:
     path: "SKILL.md"
     message: "*Keep the whole reply well under 150 words*"
     reason: "ketchup: the heading and length limit for its reply."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*Write \"unknown\" for a fact the call needs*"
+    reason: "ketchup: marks a missing fact in its reply instead of guessing."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*create a formal verification skill*"
+    reason: "create-formal-verification-skill: the skill's own heading."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*Write the update from the code before you rerun*"
+    reason: "maintain-formal-verification-skill: updates the project's verification model from the code."
 
   # AS1/AS3 fire on paths to skill files. convert.mjs rewrites upstream's `.cursor/`
   # paths to `.claude/`, so these point at Claude Code skill directories.
