@@ -17,7 +17,7 @@ The version is `<upstream version>+<upstream sha>.<content hash>`, so a `convert
 
 Residual count above 0 means upstream added a Cursor-ism the table does not cover.
 Add a row to `REPLACEMENTS` in `convert.mjs` and re-run.
-The run exits 1 when residuals remain, when a skill in `MODEL_INVOKED` still carries `disable-model-invocation`, or when a `SKILL_NOTES` key names a skill that no longer exists.
+The run exits 1 when residuals remain, when a skill in `MODEL_INVOKED` still carries `disable-model-invocation`, when a `SKILL_NOTES` key names a skill that no longer exists, or when this port adds a `~/.` path (see the RA2 note below).
 
 ## Checks
 
@@ -33,15 +33,18 @@ bin/scan-skills.sh                       # SkillSpector, fails on any finding no
 
 `--check` regenerates into a temp dir at the upstream commit recorded in `plugin/.claude-plugin/plugin.json`, so it tests `convert.mjs` and `overlays/` without pulling new upstream changes.
 It fails when `plugin/` differs, so commit the regenerated `plugin/` with any change to either.
-It also fails when the adapter note or a `SKILL_NOTES` entry names a `~/.` path, for the RA2 reason below.
 It also moves `.upstream/` to that commit, and the next plain `node convert.mjs` resets it.
 
 `bin/scan-skills.sh` scans every skill in `plugin/skills` with [NVIDIA SkillSpector](https://github.com/NVIDIA/SkillSpector).
 The findings in `.skillspector-baseline.yaml` are upstream pstack text that was reviewed and accepted, so a failure after `node convert.mjs` means upstream added something new.
 Read it, then add a rule with a reason or leave the update out.
-SkillSpector's RA2 rule matches from any "write" or "create" to the next `~/.` path, even paragraphs later.
-The adapter note that `convert.mjs` appends to every skill names its path as `$HOME/.claude/`, so a new "write" or "create" sentence fails the scan only when upstream text after it names a `~/.` path itself.
-Upstream text keeps its `~/.claude/` paths, so RA2 still catches an upstream instruction to write there.
+SkillSpector's RA2 rule matches from any "write", "create", or "mkdir" to the last `~/.` path before the next `|`, even paragraphs later.
+Where this port adds a path upstream did not have, `convert.mjs` writes it as `$HOME/.claude/`: the adapter note, `SKILL_NOTES`, and `REPLACEMENTS` rows whose source has no `~/` path.
+The run fails if one of those names a `~/.` path again.
+Paths upstream already had, such as `~/.cursor/` renamed to `~/.claude/`, keep their form, so RA2 still sees an upstream instruction to write there.
+The finding's excerpt shows only where the match starts.
+Before accepting a new RA2 finding, find the `~/.` path where it ends, since that path is what triggered it.
+An RA2 rule keyed on the opening words also hides everything between them and that path.
 When SkillSpector is missing, `bin/scan-skills.sh` prints the command that installs the version CI pins.
 
 ## Layout

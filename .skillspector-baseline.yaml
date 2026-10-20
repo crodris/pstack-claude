@@ -11,10 +11,11 @@ version: 2
 # Docs: https://github.com/NVIDIA/SkillSpector/blob/main/docs/SUPPRESSION.md
 rules:
   # RA2 "Session Persistence" has a hidden-file regex that runs from any "write" or
-  # "create" to the next `~/.` path, across paragraphs. The adapter note convert.mjs
-  # appends to every skill names its path as `$HOME/.claude/`, so a "write" sentence only
-  # matches when upstream text after it names a `~/.` path itself. Read each new one:
-  # upstream writing into `~/.claude` is exactly what RA2 exists to catch.
+  # "create" to the last `~/.` path before the next `|`, across paragraphs. Paths this
+  # port adds are written as `$HOME/.claude/` (convert.mjs fails otherwise), so these
+  # spans end at a `~/.` path upstream wrote itself. The excerpt shows only the start of
+  # the match: find the path where a new finding ends before accepting it, since each
+  # rule below also hides everything between its opening words and that path.
   - id: "RA2"
     path: "SKILL.md"
     message: "*write `~/.claude/rules/pstack-models.md`*"
