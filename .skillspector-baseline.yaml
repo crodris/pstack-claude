@@ -145,10 +145,6 @@ rules:
     path: "playbooks/multi-phase-plan.md"
     message: "skills/*/skill.md"
     reason: "poteto-mode multi-phase plan: references to sibling pstack skills (swarm, how, interrogate, show-me-your-work) by path."
-  - id: "AS3"
-    path: "references/*-reviewer.md"
-    message: "*against any `skill.md` file (workspace `.claude/skills/`*"
-    reason: "reflect reviewer prompts: reviewers check proposed edits against existing skills and propose, never apply, changes."
 
   # Upstream policy, reviewed and accepted by installing pstack.
   - id: "EA2"
@@ -160,12 +156,6 @@ rules:
       section heading for the user's own autonomy preferences. The finding text is only
       the phrase, so this rule hides "without asking" in every SKILL.md, including new
       upstream uses; re-read the upstream diff for the phrase when pulling.
-  - id: "TM1"
-    path: "playbooks/autopilot-full.md"
-    message: "git push --force"
-    reason: >-
-      Publishes a rebase of the agent's own branch with `git push --force-with-lease`
-      after an `ls-remote` check, and says never to force-push a shared branch.
   - id: "TM1"
     path: "playbooks/babysit.md"
     message: "git push --force"
