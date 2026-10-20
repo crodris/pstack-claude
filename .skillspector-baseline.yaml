@@ -118,6 +118,10 @@ rules:
     path: "SKILL.md"
     message: "*Write the update from the code before you rerun*"
     reason: "maintain-formal-verification-skill: updates the project's verification model from the code."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "*write the prompt. Use for /sharpen*"
+    reason: "sharpen: its description says it rewrites the user's prompt."
 
   # AS1/AS3 fire on paths to skill files. convert.mjs rewrites upstream's `.cursor/`
   # paths to `.claude/`, so these point at Claude Code skill directories.
