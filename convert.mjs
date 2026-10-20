@@ -29,13 +29,13 @@ const MODEL_INVOKED = ["poteto-mode", "unslop"];
 const REPLACEMENTS = [
 	// Paths
 	[/~\/\.cursor\/rules\/pstack-models\.mdc/g, "~/.claude/rules/pstack-models.md"],
-	[/`pstack-models\.mdc`/g, "`~/.claude/rules/pstack-models.md`"],
+	[/`pstack-models\.mdc`/g, "`$HOME/.claude/rules/pstack-models.md`"],
 	[/~\/\.cursor\/projects\/<slug>\/agent-transcripts\/<uuid>\/<uuid>\.jsonl/g, "~/.claude/projects/<slug>/<uuid>.jsonl"],
 	[
 		/with the leading slash dropped and each "\/" turned into "-" \(so `\/Users\/you\/proj` becomes `Users-you-proj`\)/g,
 		'with every non-alphanumeric character turned into "-" (so `/Users/you/proj` becomes `-Users-you-proj`)',
 	],
-	[/`agent-transcripts\/` directory(?: the system prompt names)?/g, "transcript directory (`~/.claude/projects/<slug>/`, where `<slug>` is the absolute project path with every non-alphanumeric character turned into `-`)"],
+	[/`agent-transcripts\/` directory(?: the system prompt names)?/g, "transcript directory (`$HOME/.claude/projects/<slug>/`, where `<slug>` is the absolute project path with every non-alphanumeric character turned into `-`)"],
 	[/\(the system prompt names (?:the|this) path/g, "(derive it from the project path"],
 	[/The system prompt names the/g, "Locate the"],
 	[/sed 's#\^\/##; s#\/#-#g'/g, "sed 's#[^A-Za-z0-9]#-#g'"],
@@ -71,7 +71,7 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 
 - **Sibling skills.** "The **x** skill", \`/x\`, and \`principle-*\` references mean the file \`../x/SKILL.md\` relative to this skill's base directory. Read it and follow it. Do not call the Skill tool for pstack skills, most are user-invocable only.
 - **Subagents.** Spawn with the Agent tool. It has no \`readonly\` or \`environment\` parameter, so ignore both. There is no cloud environment. Workers run locally, and any worker that writes gets \`isolation: "worktree"\`.
-- **Models.** Agent \`model\` accepts only \`fable\`, \`opus\`, \`sonnet\`, \`haiku\`. Per-role overrides live in \`~/.claude/rules/pstack-models.md\` (written by \`/pstack:setup-pstack\`). A value of \`inherit-parent\` or \`auto\` means omit \`model\`.
+- **Models.** Agent \`model\` accepts only \`fable\`, \`opus\`, \`sonnet\`, \`haiku\`. Per-role overrides live in \`$HOME/.claude/rules/pstack-models.md\` (written by \`/pstack:setup-pstack\`). A value of \`inherit-parent\` or \`auto\` means omit \`model\`.
 - **Missing Cursor skills.** \`cursor-team-kit\` is not installed. For \`/deslop\` use \`/simplify\`. For \`control-ui\` drive the app with whatever browser automation tools are available. For \`control-cli\` use Bash. For Cursor's built-in \`create-skill\` use any installed skill-authoring skill.
 - **Bugbot.** Guidance about Bugbot applies to whatever review bot comments on the PR (CodeRabbit, etc.).
 `;
@@ -216,7 +216,15 @@ if (stillBlocked.length) console.log(`still user-invocable only: ${stillBlocked.
 // A SKILL_NOTES key that no longer names a skill (upstream renamed or removed it) would drop its note silently.
 const orphanNotes = Object.keys(SKILL_NOTES).filter((dir) => !existsSync(join(OUT, "skills", dir, "SKILL.md")));
 if (orphanNotes.length) console.log(`SKILL_NOTES for missing skills: ${orphanNotes.join(", ")}`);
-let failed = residuals.length > 0 || stillBlocked.length > 0 || orphanNotes.length > 0;
+// SkillSpector's RA2 hidden-file regex runs from any "write" or "create" to the last `~/.` path before a `|`, across
+// paragraphs. A `~/.` path this port adds where upstream had none turns each upstream "write" above it into a scan failure.
+const DOT_PATH = /(?:~\/|\/home\/|\/tmp\/)\./;
+const dotPathNotes = Object.entries({ ADAPTER_NOTE, ...SKILL_NOTES }).filter(([, note]) => DOT_PATH.test(note));
+if (dotPathNotes.length) console.log(`appended notes name a ~/. path, write $HOME/. instead: ${dotPathNotes.map(([name]) => name).join(", ")}`);
+const dotPathRows = REPLACEMENTS.filter(([from, to]) => DOT_PATH.test(to) && !from.source.includes("~"));
+if (dotPathRows.length) console.log(`replacements add a ~/. path upstream did not have, write $HOME/. instead: ${dotPathRows.map(([from]) => from).join(", ")}`);
+let failed =
+	residuals.length > 0 || stillBlocked.length > 0 || orphanNotes.length > 0 || dotPathNotes.length > 0 || dotPathRows.length > 0;
 
 if (CHECK) {
 	// Compare what git would commit, so ignored files such as .DS_Store under plugin/ do not count.
