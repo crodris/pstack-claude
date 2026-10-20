@@ -33,11 +33,14 @@ bin/scan-skills.sh                       # SkillSpector, fails on any finding no
 
 `--check` regenerates into a temp dir at the upstream commit recorded in `plugin/.claude-plugin/plugin.json`, so it tests `convert.mjs` and `overlays/` without pulling new upstream changes.
 It fails when `plugin/` differs, so commit the regenerated `plugin/` with any change to either.
+It also fails when the adapter note or a `SKILL_NOTES` entry names a `~/.` path, for the RA2 reason below.
 It also moves `.upstream/` to that commit, and the next plain `node convert.mjs` resets it.
 
 `bin/scan-skills.sh` scans every skill in `plugin/skills` with [NVIDIA SkillSpector](https://github.com/NVIDIA/SkillSpector).
 The findings in `.skillspector-baseline.yaml` are upstream pstack text that was reviewed and accepted, so a failure after `node convert.mjs` means upstream added something new.
 Read it, then add a rule with a reason or leave the update out.
+SkillSpector's RA2 rule matches from any "write" or "create" to the next `~/.` path, even paragraphs later.
+`convert.mjs` writes every `~/.claude/` path as `$HOME/.claude/`, so ordinary "write" and "create" prose in upstream text does not fail the scan.
 When SkillSpector is missing, `bin/scan-skills.sh` prints the command that installs the version CI pins.
 
 ## Layout

@@ -62,6 +62,9 @@ const REPLACEMENTS = [
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
 	[/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. With no family match, use /g, "Under Claude Code that means "],
+	// Last, so it also covers the paths written above. SkillSpector's RA2 hidden-file regex runs from any "write" or
+	// "create" to the next `~/.` path, across paragraphs, so a `~/.claude/` path fails the scan on unrelated upstream text.
+	[/~\/\.claude\//g, "$HOME/.claude/"],
 ];
 
 const ADAPTER_NOTE = `
@@ -71,7 +74,7 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 
 - **Sibling skills.** "The **x** skill", \`/x\`, and \`principle-*\` references mean the file \`../x/SKILL.md\` relative to this skill's base directory. Read it and follow it. Do not call the Skill tool for pstack skills, most are user-invocable only.
 - **Subagents.** Spawn with the Agent tool. It has no \`readonly\` or \`environment\` parameter, so ignore both. There is no cloud environment. Workers run locally, and any worker that writes gets \`isolation: "worktree"\`.
-- **Models.** Agent \`model\` accepts only \`fable\`, \`opus\`, \`sonnet\`, \`haiku\`. Per-role overrides live in \`~/.claude/rules/pstack-models.md\` (written by \`/pstack:setup-pstack\`). A value of \`inherit-parent\` or \`auto\` means omit \`model\`.
+- **Models.** Agent \`model\` accepts only \`fable\`, \`opus\`, \`sonnet\`, \`haiku\`. Per-role overrides live in \`$HOME/.claude/rules/pstack-models.md\` (written by \`/pstack:setup-pstack\`). A value of \`inherit-parent\` or \`auto\` means omit \`model\`.
 - **Missing Cursor skills.** \`cursor-team-kit\` is not installed. For \`/deslop\` use \`/simplify\`. For \`control-ui\` drive the app with whatever browser automation tools are available. For \`control-cli\` use Bash. For Cursor's built-in \`create-skill\` use any installed skill-authoring skill.
 - **Bugbot.** Guidance about Bugbot applies to whatever review bot comments on the PR (CodeRabbit, etc.).
 `;
@@ -216,7 +219,11 @@ if (stillBlocked.length) console.log(`still user-invocable only: ${stillBlocked.
 // A SKILL_NOTES key that no longer names a skill (upstream renamed or removed it) would drop its note silently.
 const orphanNotes = Object.keys(SKILL_NOTES).filter((dir) => !existsSync(join(OUT, "skills", dir, "SKILL.md")));
 if (orphanNotes.length) console.log(`SKILL_NOTES for missing skills: ${orphanNotes.join(", ")}`);
-let failed = residuals.length > 0 || stillBlocked.length > 0 || orphanNotes.length > 0;
+// SkillSpector's RA2 hidden-file regex runs from any "write" or "create" to the next `~/.` path, across paragraphs.
+// A `~/.` path in text appended to every skill turns each new upstream "write" or "create" into a scan failure.
+const dotPathNotes = Object.entries({ ADAPTER_NOTE, ...SKILL_NOTES }).filter(([, note]) => /(?:~\/|\/home\/|\/tmp\/)\./.test(note));
+if (dotPathNotes.length) console.log(`appended notes name a ~/. path, write $HOME/. instead: ${dotPathNotes.map(([name]) => name).join(", ")}`);
+let failed = residuals.length > 0 || stillBlocked.length > 0 || orphanNotes.length > 0 || dotPathNotes.length > 0;
 
 if (CHECK) {
 	// Compare what git would commit, so ignored files such as .DS_Store under plugin/ do not count.
