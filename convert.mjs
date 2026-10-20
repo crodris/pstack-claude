@@ -62,9 +62,6 @@ const REPLACEMENTS = [
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
 	[/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. With no family match, use /g, "Under Claude Code that means "],
-	// Last, so it also covers the paths written above. SkillSpector's RA2 hidden-file regex runs from any "write" or
-	// "create" to the next `~/.` path, across paragraphs, so a `~/.claude/` path fails the scan on unrelated upstream text.
-	[/~\/\.claude\//g, "$HOME/.claude/"],
 ];
 
 const ADAPTER_NOTE = `

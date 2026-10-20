@@ -40,7 +40,8 @@ It also moves `.upstream/` to that commit, and the next plain `node convert.mjs`
 The findings in `.skillspector-baseline.yaml` are upstream pstack text that was reviewed and accepted, so a failure after `node convert.mjs` means upstream added something new.
 Read it, then add a rule with a reason or leave the update out.
 SkillSpector's RA2 rule matches from any "write" or "create" to the next `~/.` path, even paragraphs later.
-`convert.mjs` writes every `~/.claude/` path as `$HOME/.claude/`, so ordinary "write" and "create" prose in upstream text does not fail the scan.
+The adapter note that `convert.mjs` appends to every skill names its path as `$HOME/.claude/`, so a new "write" or "create" sentence fails the scan only when upstream text after it names a `~/.` path itself.
+Upstream text keeps its `~/.claude/` paths, so RA2 still catches an upstream instruction to write there.
 When SkillSpector is missing, `bin/scan-skills.sh` prints the command that installs the version CI pins.
 
 ## Layout

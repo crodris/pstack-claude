@@ -61,7 +61,7 @@ elif raw=$(gh pr list --author "@me" --state all --limit 1000 \
 fi
 [ -s "$prs" ] || echo "[]" > "$prs"
 
-# Transcripts dir: $HOME/.claude/projects/<slugified-repo-path>.
+# Transcripts dir: ~/.claude/projects/<slugified-repo-path>.
 slug=$(printf '%s' "$main_wt" | sed 's#[^A-Za-z0-9]#-#g')
 transcripts="$HOME/.claude/projects/$slug"
 now=$(date +%s)
