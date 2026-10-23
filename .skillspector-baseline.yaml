@@ -110,3 +110,22 @@ rules:
     path: "SKILL.md"
     message: "*references/patterns.md*"
     reason: "typescript-best-practices: the scanner did not fully read references/patterns.md, which is plain TypeScript guidance."
+  - id: "PE3"
+    path: "scripts/test/statechart.test.mjs"
+    message: ".env "
+    reason: "statechart tests: `env: { ...process.env, ...env }` passes the test's environment to the child node process. No credential file is read."
+  - id: "PE5"
+    path: "scripts/test/statechart.test.mjs"
+    message: "unshare\", \"--user"
+    reason: >-
+      statechart tests: an unprivileged user and PID namespace, plus an LD_PRELOAD shim,
+      hide a running process from statechart.mjs to test how it handles that. The test
+      skips itself when unshare is unavailable, and the skill never runs it.
+  - id: "TR2"
+    path: "SKILL.md"
+    message: "*'Use for /statechart*conflicts with built-in command 'show'*"
+    reason: "statechart: its description says it can show a bug as a path; it defines no /show command."
+  - id: "EA4"
+    path: "scripts/statechart-help.mjs"
+    message: "repeat*forever"
+    reason: "statechart help text: describes TLC counterexample states that repeat forever. It sets no loop or resource use."
