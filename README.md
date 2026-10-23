@@ -11,7 +11,21 @@ This repo only holds the converter (`convert.mjs`) that rewrites pstack for Clau
 Nothing under `plugin/` is hand-edited.
 For anything about how pstack works, go to [upstream](https://github.com/cursor/plugins/tree/main/pstack).
 
-## Update
+## Install
+
+You need read access to this repo. Claude Code clones it with your git credentials.
+
+```bash
+claude plugin marketplace add crodris/pstack-claude
+claude plugin install pstack@pstack-claude
+```
+
+To pick up a new version, run `claude plugin marketplace update pstack-claude`, then restart Claude Code.
+You never need to run `convert.mjs` to use the plugin.
+
+## Update from upstream (maintainers)
+
+Clone this repo, add it as a local marketplace once with `claude plugin marketplace add <path to your clone>`, then run:
 
 ```bash
 node convert.mjs
@@ -60,13 +74,6 @@ When SkillSpector is missing, `bin/scan-skills.sh` prints the command that insta
 - `overlays/` - files copied over the generated output. Only `setup-pstack`, whose model-budget logic is specific to Cursor model slugs.
 - `plugin/` - generated Claude Code plugin.
 - `.upstream/` - sparse clone of upstream, gitignored.
-
-## Install (done once)
-
-```bash
-claude plugin marketplace add ~/Desktop/Projects/pstack-claude
-claude plugin install pstack@pstack-claude
-```
 
 ## Use
 
