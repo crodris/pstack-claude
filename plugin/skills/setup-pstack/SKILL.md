@@ -34,7 +34,7 @@ Ask with AskUserQuestion, naming the current budget when the rule records one. D
 - Fast roles: `how explorer`, `why investigators`, `swarm workers`.
 - Panel lists: `arena runners`, `arena cross-judge pool`, `architect runners`, `interrogate reviewers`.
 
-Recommend `large` on a subscription plan. Workers dominate token burn and are `sonnet` in `large` and `medium`, so the judgment roles are the cheap place to keep a strong model. `unlimited` also puts code workers on `opus`, which spends quota fastest.
+Recommend `large` on a subscription plan. Workers dominate token burn and are `sonnet` in every budget but `unlimited`, so the judgment roles are the cheap place to keep a strong model. `unlimited` also puts code workers on `opus`, which spends quota fastest.
 
 On a re-run, keep any role the user changed by hand. `inherit-parent` and `auto` never change.
 
