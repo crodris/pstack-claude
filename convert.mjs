@@ -61,7 +61,11 @@ const REPLACEMENTS = [
 	[/claude-opus-[\d-]+[a-z]+/g, "fable"],
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
-	[/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. With no family match, use /g, "Under Claude Code that means "],
+	// arena's judge must come from another family than the parent's, so each Claude model counts as its own family.
+	[
+		/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. If the family has no default, or the Agent tool rejects that default, use /g,
+		"Under Claude Code that default is `fable`, and each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family. If the Agent tool rejects `fable`, use ",
+	],
 ];
 
 const ADAPTER_NOTE = `
