@@ -56,20 +56,20 @@ const REPLACEMENTS = [
 	[/subagent_type: "Comment Sicko"/g, 'subagent_type: "pstack:Comment Sicko"'],
 
 	// Models. Claude Code subagents run Claude only, so the cross-vendor panel maps by role:
-	// upstream's strongest Claude slot to fable, gpt to opus, grok to sonnet. Upstream dropped gpt from its
-	// panels, so the generated defaults are `fable, sonnet` while the overlay's `unlimited` shape keeps opus too.
-	[/claude-opus-[\d-]+[a-z]+/g, "fable"],
+	// upstream's strongest Claude slot to opus, gpt to opus, grok to sonnet. Upstream dropped gpt from its
+	// panels, so the generated defaults are `opus, sonnet`. fable is left for the user to set by hand.
+	[/claude-opus-[\d-]+[a-z]+/g, "opus"],
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
 	// arena's judge must come from another family than the parent's, so each Claude model counts as its own family.
 	// These two rows match text the model rows above already rewrote, so they stay after them.
 	[
 		/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. If the family has no default, or the Agent tool rejects that default, use the closest valid slug of the same family from its error message, or drop the seat and say so when there is none\./g,
-		"Under Claude Code that default is `fable` for every entry, and each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family. If the Agent tool rejects `fable`, drop the seat and say so.",
+		"Under Claude Code that default is `opus` for every entry, and each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family. If the Agent tool rejects `opus`, drop the seat and say so.",
 	],
 	[
-		/With the default pool, a Claude parent gets `sonnet`\. A parent from any other family gets `fable` first\./g,
-		"With the default pool, a `fable` parent gets `sonnet`, and any other parent gets `fable`.",
+		/With the default pool, a Claude parent gets `sonnet`\. A parent from any other family gets `opus` first\./g,
+		"With the default pool, an `opus` parent gets `sonnet`, and any other parent gets `opus`.",
 	],
 ];
 
