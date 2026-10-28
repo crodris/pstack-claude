@@ -62,9 +62,14 @@ const REPLACEMENTS = [
 	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
 	// arena's judge must come from another family than the parent's, so each Claude model counts as its own family.
+	// These two rows match text the model rows above already rewrote, so they stay after them.
 	[
-		/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. If the family has no default, or the Agent tool rejects that default, use /g,
-		"Under Claude Code that default is `fable`, and each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family. If the Agent tool rejects `fable`, use ",
+		/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. If the family has no default, or the Agent tool rejects that default, use the closest valid slug of the same family from its error message, or drop the seat and say so when there is none\./g,
+		"Under Claude Code that default is `fable` for every entry, and each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family. If the Agent tool rejects `fable`, drop the seat and say so.",
+	],
+	[
+		/With the default pool, a Claude parent gets `sonnet`\. A parent from any other family gets `fable` first\./g,
+		"With the default pool, a `fable` parent gets `sonnet`, and any other parent gets `fable`.",
 	],
 ];
 

@@ -40,7 +40,7 @@ On a re-run, keep any role the user changed by hand. `inherit-parent` and `auto`
 
 ### 3. Show the roles and confirm
 
-Show every role with its model. Also list each line step 1 dropped, and each `cursor` line it kept unchanged. Ask whether to accept as-is or change specific roles. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list and one subagent runs per entry, so the list length sets the fan-out and the cost. `arena cross-judge pool` is a list Arena picks one value from. `swarm workers` is the default for every worker unless a race assigns a model per arm.
+Show every role with its model. Also list each line step 1 dropped, and each `cursor` line it kept unchanged. Ask whether to accept as-is or change specific roles. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list and one subagent runs per entry, so the list length sets the fan-out and the cost. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only models other than the parent's, in list order, so order it by preference. An `inherit-parent` or `auto` value never judges. `swarm workers` is the default for every worker unless a race assigns a model per arm.
 
 ### 4. Write the rule
 
