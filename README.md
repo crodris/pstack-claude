@@ -37,7 +37,8 @@ The version is `<upstream version>+<upstream sha>.<content hash>`, so a `convert
 
 Residual count above 0 means upstream added a Cursor-ism the table does not cover.
 Add a row to `REPLACEMENTS` in `convert.mjs` and re-run.
-The run exits 1 when residuals remain, when a skill in `MODEL_INVOKED` still carries `disable-model-invocation`, when a `SKILL_NOTES` key names a skill that no longer exists, or when this port adds a `~/.` path (see the RA2 note below).
+The run exits 1 when residuals remain, when a skill in `MODEL_INVOKED` still carries `disable-model-invocation`, when a `SKILL_NOTES` key names a skill that no longer exists, when a `REPLACEMENTS` row matches nothing, or when this port adds a `~/.` path (see the RA2 note below).
+A row matches nothing when upstream reworded or removed the text it targets, when an earlier row now rewrites that text first, or when the row has a typo. Update the row to match the text it should convert, or delete it.
 
 ## Checks
 

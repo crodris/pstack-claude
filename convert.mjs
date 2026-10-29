@@ -51,15 +51,13 @@ const REPLACEMENTS = [
 	[/\bTask (tool|`model`)/g, "Agent $1"],
 	[/\bTask subagent/g, "subagent"],
 	[/\bTask spawn/g, "subagent spawn"],
-	[/^- `readonly`: .*\n/gm, ""],
 	[/subagent_type: "poteto-agent"/g, 'subagent_type: "pstack:poteto-agent"'],
-	[/subagent_type: "Comment Sicko"/g, 'subagent_type: "pstack:Comment Sicko"'],
+	[/subagent_type: "comment-sicko"/g, 'subagent_type: "pstack:comment-sicko"'],
 
 	// Models. Claude Code subagents run Claude only, so the cross-vendor panel maps by role:
-	// upstream's strongest Claude slot to opus, gpt to opus, grok to sonnet. Upstream dropped gpt from its
-	// panels, so the generated defaults are `opus, sonnet`. fable is left for the user to set by hand.
+	// upstream's strongest Claude slot to opus and grok to sonnet, so the generated defaults are `opus, sonnet`.
+	// fable is left for the user to set by hand.
 	[/claude-opus-[\d-]+[a-z]+/g, "opus"],
-	[/gpt-5\.\d+-[a-z-]+/g, "opus"],
 	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
 	// arena's judge must come from another family than the parent's, so each Claude model counts as its own family.
 	// These two rows match text the model rows above already rewrote, so they stay after them.
@@ -130,8 +128,14 @@ function walk(dir) {
 	);
 }
 
+// Indexes of the REPLACEMENTS rows that matched somewhere in this run.
+const usedRows = new Set();
+
 function convertText(text) {
-	return REPLACEMENTS.reduce((t, [from, to]) => t.replace(from, to), text);
+	return REPLACEMENTS.reduce((t, [from, to], i) => {
+		if (t.search(from) !== -1) usedRows.add(i);
+		return t.replace(from, to);
+	}, text);
 }
 
 function previousSha() {
@@ -149,10 +153,14 @@ mkdirSync(join(OUT, ".claude-plugin"), { recursive: true });
 for (const entry of ["skills", "agents", "LICENSE"]) cpSync(join(SRC, entry), join(OUT, entry), { recursive: true });
 for (const skill of SKIP_SKILLS) rmSync(join(OUT, "skills", skill), { recursive: true, force: true });
 
+const overlays = join(ROOT, "overlays");
+
 for (const file of walk(OUT)) {
 	if (!/\.(md|sh)$/.test(file)) continue;
-	let text = convertText(readFileSync(file, "utf8"));
 	const rel = relative(OUT, file);
+	// An overlay replaces this file below, and converting it would count rows that change nothing in plugin/.
+	if (existsSync(join(overlays, rel))) continue;
+	let text = convertText(readFileSync(file, "utf8"));
 	if (basename(file) === "SKILL.md") {
 		// Claude Code derives the slash command from the directory, keep `name` in step with it.
 		const dir = basename(dirname(file));
@@ -165,7 +173,6 @@ for (const file of walk(OUT)) {
 	writeFileSync(file, text);
 }
 
-const overlays = join(ROOT, "overlays");
 if (existsSync(overlays)) cpSync(overlays, OUT, { recursive: true });
 
 mkdirSync(join(OUT, "hooks"), { recursive: true });
@@ -232,8 +239,17 @@ const dotPathNotes = Object.entries({ ADAPTER_NOTE, ...SKILL_NOTES }).filter(([,
 if (dotPathNotes.length) console.log(`appended notes name a ~/. path, write $HOME/. instead: ${dotPathNotes.map(([name]) => name).join(", ")}`);
 const dotPathRows = REPLACEMENTS.filter(([from, to]) => DOT_PATH.test(to) && !from.source.includes("~"));
 if (dotPathRows.length) console.log(`replacements add a ~/. path upstream did not have, write $HOME/. instead: ${dotPathRows.map(([from]) => from).join(", ")}`);
+// A row that matches nothing leaves its target text unconverted without any error. Upstream reworded or removed that text,
+// an earlier row now rewrites it first, or the row has a typo.
+const unusedRows = REPLACEMENTS.filter((_, i) => !usedRows.has(i));
+if (unusedRows.length) console.log(`replacements that matched nothing, update or delete them:\n${unusedRows.map(([from]) => `  ${from}`).join("\n")}`);
 let failed =
-	residuals.length > 0 || stillBlocked.length > 0 || orphanNotes.length > 0 || dotPathNotes.length > 0 || dotPathRows.length > 0;
+	residuals.length > 0 ||
+	stillBlocked.length > 0 ||
+	orphanNotes.length > 0 ||
+	dotPathNotes.length > 0 ||
+	dotPathRows.length > 0 ||
+	unusedRows.length > 0;
 
 if (CHECK) {
 	// Compare what git would commit, so ignored files such as .DS_Store under plugin/ do not count.
