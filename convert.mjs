@@ -153,10 +153,14 @@ mkdirSync(join(OUT, ".claude-plugin"), { recursive: true });
 for (const entry of ["skills", "agents", "LICENSE"]) cpSync(join(SRC, entry), join(OUT, entry), { recursive: true });
 for (const skill of SKIP_SKILLS) rmSync(join(OUT, "skills", skill), { recursive: true, force: true });
 
+const overlays = join(ROOT, "overlays");
+
 for (const file of walk(OUT)) {
 	if (!/\.(md|sh)$/.test(file)) continue;
-	let text = convertText(readFileSync(file, "utf8"));
 	const rel = relative(OUT, file);
+	// An overlay replaces this file below, and converting it would count rows that change nothing in plugin/.
+	if (existsSync(join(overlays, rel))) continue;
+	let text = convertText(readFileSync(file, "utf8"));
 	if (basename(file) === "SKILL.md") {
 		// Claude Code derives the slash command from the directory, keep `name` in step with it.
 		const dir = basename(dirname(file));
@@ -169,7 +173,6 @@ for (const file of walk(OUT)) {
 	writeFileSync(file, text);
 }
 
-const overlays = join(ROOT, "overlays");
 if (existsSync(overlays)) cpSync(overlays, OUT, { recursive: true });
 
 mkdirSync(join(OUT, "hooks"), { recursive: true });
@@ -236,7 +239,8 @@ const dotPathNotes = Object.entries({ ADAPTER_NOTE, ...SKILL_NOTES }).filter(([,
 if (dotPathNotes.length) console.log(`appended notes name a ~/. path, write $HOME/. instead: ${dotPathNotes.map(([name]) => name).join(", ")}`);
 const dotPathRows = REPLACEMENTS.filter(([from, to]) => DOT_PATH.test(to) && !from.source.includes("~"));
 if (dotPathRows.length) console.log(`replacements add a ~/. path upstream did not have, write $HOME/. instead: ${dotPathRows.map(([from]) => from).join(", ")}`);
-// A row that matches nothing is dead or no longer matches reworded upstream text, which leaves the old wording without any error.
+// A row that matches nothing leaves its target text unconverted without any error. Upstream reworded or removed that text,
+// an earlier row now rewrites it first, or the row has a typo.
 const unusedRows = REPLACEMENTS.filter((_, i) => !usedRows.has(i));
 if (unusedRows.length) console.log(`replacements that matched nothing, update or delete them:\n${unusedRows.map(([from]) => `  ${from}`).join("\n")}`);
 let failed =
