@@ -91,6 +91,10 @@ const SKILL_NOTES = {
 - **Guide pages.** The README and \`docs/guide\` pages are not shipped with this plugin. Read them upstream at https://github.com/cursor/plugins/tree/main/pstack. Their install steps are for Cursor, so use the Install note above instead.
 - **Not ported.** \`/make-bot-ui\` needs Cursor Automations and is not in this plugin.
 `,
+	"create-formal-verification-skill": `- **TLA+ checker.** Check TLA+ models with [tla-ts](https://github.com/aidenybai/tla-ts), not TLC. It reads TLC's configs, prints TLC's messages, and needs no Java. Add it as a devDependency pinned to an exact version, and run the \`tla-ts\` binary from the repo's install. Do not download \`tla2tools.jar\`. If tla-ts refuses the model with \`TlaUnsupportedError\`, tell the user which construct it refused, and use TLC for that model only.
+`,
+	"maintain-formal-verification-skill": `- **TLA+ checker.** When a check still runs TLC (\`tla2tools.jar\`, \`tlc2.TLC\`, or a Java install), move it to [tla-ts](https://github.com/aidenybai/tla-ts) during this upkeep. Add tla-ts as a devDependency pinned to an exact version and run the same configs. Remove TLC only after tla-ts reports the same distinct-state count on every passing config and the same violated invariant on every failing one. If they differ, keep TLC and report the difference.
+`,
 };
 
 // Port of upstream's Cursor-only `reminder:` frontmatter. Narrowed to coding tasks so questions stay cheap.
