@@ -8,6 +8,7 @@ pstack's skills, agents, principles, and ideas are all Lauren's work.
 They're released under her MIT license, which is copied in [`plugin/LICENSE`](plugin/LICENSE).
 I didn't design any of it.
 This repo only holds the converter (`convert.mjs`) that rewrites pstack for Claude Code, plus one overlay that replaces `setup-pstack`, because upstream's model-budget logic uses Cursor model names.
+`SKILL_NOTES` in `convert.mjs` also changes one upstream choice: the formal verification skills check TLA+ models with [tla-ts](https://github.com/aidenybai/tla-ts), which needs no Java.
 Nothing under `plugin/` is hand-edited.
 For anything about how pstack works, go to [upstream](https://github.com/cursor/plugins/tree/main/pstack).
 
@@ -100,7 +101,7 @@ You type them as `/pstack:<name>`, or another pstack skill reads them, such as `
 | [`blast-radius`](plugin/skills/blast-radius/SKILL.md) | A small change might break something outside the diff. | Traces what else the change touches, then runs real code to prove the one fact the change is safe because of. |
 | [`bro`](plugin/skills/bro/SKILL.md) | The last reply was too dense. | Restates it in plain language with no jargon. |
 | [`correct`](plugin/skills/correct/SKILL.md) | You keep correcting agents for the same mistake. | Finds repeated mistake classes in the repo history and makes each one impossible: architecture first, then types, a lint, a test, and docs last. It proves each check fails on a real past mistake. |
-| [`create-formal-verification-skill`](plugin/skills/create-formal-verification-skill/SKILL.md) | A bug in concurrency, retries, a state machine, a parser, or unsafe code would cost more than tests can rule out. | Generates a project-local skill that formally verifies that code with whichever verification tool fits, in any language. |
+| [`create-formal-verification-skill`](plugin/skills/create-formal-verification-skill/SKILL.md) | A bug in concurrency, retries, a state machine, a parser, or unsafe code would cost more than tests can rule out. | Generates a project-local skill that formally verifies that code with whichever verification tool fits, in any language, and checks TLA+ models with tla-ts. |
 | [`create-verification-skill`](plugin/skills/create-verification-skill/SKILL.md) | Your project has no scripted way to prove app behavior. | Generates a project-local verify skill with a feature map that drives your app like a user, for any language or platform. |
 | [`figure-it-out`](plugin/skills/figure-it-out/SKILL.md) | No `poteto-mode` playbook fits, such as a large migration. | Designs an auditable playbook for the task, runs a hypothesis loop, and logs decisions with `show-me-your-work`. |
 | [`how`](plugin/skills/how/SKILL.md) | You want a walkthrough of how a subsystem works, or where code should live. | For a narrow question, one explainer subagent explores and explains in one pass. For a subsystem, 2 to 4 explorer subagents map it in parallel first, then the explainer writes the walkthrough. |
