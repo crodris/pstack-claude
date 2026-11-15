@@ -2,6 +2,8 @@
 // Converts cursor/plugins pstack into a Claude Code plugin at ./plugin.
 // Re-run to update: pulls upstream, regenerates ./plugin from scratch, reports leftover Cursor-isms.
 // `--check` regenerates at the upstream commit plugin/ was built from, into a temp dir, and fails if plugin/ differs.
+// PSTACK_UPSTREAM_SHA pins a regeneration to that cursor/plugins commit instead of upstream main, so a test that runs
+// convert.mjs gets the same result however upstream moves.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
@@ -150,7 +152,7 @@ function previousSha() {
 
 const before = previousSha();
 if (CHECK && !before) throw new Error("--check needs a generated plugin/ to compare against");
-const sha = syncUpstream(CHECK ? before : null);
+const sha = syncUpstream(CHECK ? before : process.env.PSTACK_UPSTREAM_SHA || null);
 const upstreamManifest = JSON.parse(readFileSync(join(SRC, ".cursor-plugin", "plugin.json"), "utf8"));
 
 rmSync(OUT, { recursive: true, force: true });
