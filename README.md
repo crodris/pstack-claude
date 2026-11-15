@@ -33,6 +33,8 @@ node convert.mjs
 ```
 
 Pulls upstream, regenerates `plugin/` from scratch, prints a GitHub compare link for what changed upstream, lists residual Cursor references, and runs `claude plugin update pstack@pstack-claude`.
+`PSTACK_UPSTREAM_SHA=<full 40-character sha>` regenerates from that cursor/plugins commit instead, so a test such as claude-config's `pstack-autoupdate.test.sh` gets the same result however upstream moves.
+The commit must be on cursor/plugins `main`, the run fails otherwise, and it moves `.upstream/` the way `--check` does.
 Claude Code runs a cached copy under `~/.claude/plugins/cache/`, not this directory, so restart after a convert to load it.
 The version is `<upstream version>+<upstream sha>.<content hash>`, so a `convert.mjs` or overlay change with upstream unchanged still counts as an update.
 

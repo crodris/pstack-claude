@@ -2,8 +2,8 @@
 // Converts cursor/plugins pstack into a Claude Code plugin at ./plugin.
 // Re-run to update: pulls upstream, regenerates ./plugin from scratch, reports leftover Cursor-isms.
 // `--check` regenerates at the upstream commit plugin/ was built from, into a temp dir, and fails if plugin/ differs.
-// PSTACK_UPSTREAM_SHA pins a regeneration to that cursor/plugins commit instead of upstream main, so a test that runs
-// convert.mjs gets the same result however upstream moves.
+// PSTACK_UPSTREAM_SHA, a full 40-character commit on cursor/plugins main, pins a regeneration to that commit instead of
+// upstream main, so a test that runs convert.mjs gets the same result however upstream moves.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
@@ -108,8 +108,8 @@ const AGENT_NOTE = `
 Running under Claude Code: pstack skills live at \`\${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md\`. Read them by path. Do not call the Skill tool for them.
 `;
 
-function git(args, cwd) {
-	return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }).trim();
+function git(args, cwd, env = process.env) {
+	return execFileSync("git", args, { cwd, env, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }).trim();
 }
 
 function syncUpstream(pin) {
@@ -121,10 +121,14 @@ function syncUpstream(pin) {
 		git(["reset", "--hard", "FETCH_HEAD"], UPSTREAM);
 	}
 	if (pin) {
-		// The manifest records a short sha, which git resolves only against local history.
+		// The manifest's short sha, or PSTACK_UPSTREAM_SHA, resolves only against local history, so main is unshallowed.
 		const shallow = git(["rev-parse", "--is-shallow-repository"], UPSTREAM) === "true";
 		git(["fetch", "--filter=blob:none", ...(shallow ? ["--unshallow"] : []), "origin", "main"], UPSTREAM);
-		git(["checkout", "--quiet", "--detach", pin], UPSTREAM);
+		// No lazy fetch, so a commit that only a fork has cannot be pulled in by its sha, and the pin must be on main.
+		const commit = git(["rev-parse", "--verify", "--end-of-options", `${pin}^{commit}`], UPSTREAM, { ...process.env, GIT_NO_LAZY_FETCH: "1" });
+		git(["merge-base", "--is-ancestor", commit, "FETCH_HEAD"], UPSTREAM);
+		// --force drops any local edit in .upstream, which would otherwise carry over to the pinned checkout.
+		git(["checkout", "--quiet", "--force", "--detach", commit], UPSTREAM);
 	}
 	return git(["rev-parse", "HEAD"], UPSTREAM);
 }
@@ -152,7 +156,9 @@ function previousSha() {
 
 const before = previousSha();
 if (CHECK && !before) throw new Error("--check needs a generated plugin/ to compare against");
-const sha = syncUpstream(CHECK ? before : process.env.PSTACK_UPSTREAM_SHA || null);
+const pinnedUpstream = CHECK ? null : process.env.PSTACK_UPSTREAM_SHA || null;
+if (pinnedUpstream && !/^[0-9a-f]{40}$/.test(pinnedUpstream)) throw new Error("PSTACK_UPSTREAM_SHA must be a full 40-character cursor/plugins commit");
+const sha = syncUpstream(CHECK ? before : pinnedUpstream);
 const upstreamManifest = JSON.parse(readFileSync(join(SRC, ".cursor-plugin", "plugin.json"), "utf8"));
 
 rmSync(OUT, { recursive: true, force: true });
@@ -226,8 +232,9 @@ const residuals = walk(OUT)
 	);
 
 console.log(`pstack ${upstreamManifest.version} @ ${sha.slice(0, 7)} -> ${CHECK ? "temp dir" : relative(process.cwd(), OUT) || "."}`);
-if (before && !sha.startsWith(before)) console.log(`upstream changes: ${REPO}/compare/${before}...${sha.slice(0, 7)}`);
-if (before && sha.startsWith(before)) console.log("upstream unchanged");
+if (pinnedUpstream) console.log(`pinned to ${sha.slice(0, 7)} by PSTACK_UPSTREAM_SHA`);
+else if (before && !sha.startsWith(before)) console.log(`upstream changes: ${REPO}/compare/${before}...${sha.slice(0, 7)}`);
+else if (before && sha.startsWith(before)) console.log("upstream unchanged");
 console.log(`residual Cursor references: ${residuals.length}`);
 for (const { at, line } of residuals) console.log(`  ${at}  ${line.trim().slice(0, 140)}`);
 
