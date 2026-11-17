@@ -31,7 +31,6 @@ const MODEL_INVOKED = ["poteto-mode", "unslop"];
 const REPLACEMENTS = [
 	// Paths
 	[/~\/\.cursor\/rules\/pstack-models\.mdc/g, "~/.claude/rules/pstack-models.md"],
-	[/`pstack-models\.mdc`/g, "`$HOME/.claude/rules/pstack-models.md`"],
 	[/~\/\.cursor\/projects\/<slug>\/agent-transcripts\/<uuid>\/<uuid>\.jsonl/g, "~/.claude/projects/<slug>/<uuid>.jsonl"],
 	[
 		/with the leading slash dropped and each "\/" turned into "-" \(so `\/Users\/you\/proj` becomes `Users-you-proj`\)/g,
@@ -57,20 +56,25 @@ const REPLACEMENTS = [
 	[/subagent_type: "comment-sicko"/g, 'subagent_type: "pstack:comment-sicko"'],
 
 	// Models. Claude Code subagents run Claude only, so the cross-vendor panel maps by role:
-	// upstream's strongest Claude slot to opus and grok to sonnet, so the generated defaults are `opus, sonnet`.
-	// fable is left for the user to set by hand.
-	[/claude-opus-[\d-]+[a-z]+/g, "opus"],
-	[/(?:cursor-)?grok-[\d.]+-[a-z-]+/g, "sonnet"],
-	// arena's judge must come from another family than the parent's, so each Claude model counts as its own family.
-	// These two rows match text the model rows above already rewrote, so they stay after them.
+	// Fable to fable, Opus to opus, and the non-Claude seat to sonnet, so panels stay three distinct models.
+	// Claude Code aliases carry no speed or level, so these sentences about slug suffixes go first.
+	[/ Opus 5\.5 always runs its `-fast` slug\./g, ""],
+	[/ A Gemini seat never runs above `gemini-[^`]+`, its top slug\./g, ""],
+	[/claude-opus-[\d-]+[a-z]+(?:-fast)?/g, "opus"],
+	[/claude-fable-[\d-]+[a-z]+(?:-fast)?/g, "fable"],
+	[/gemini-[\d.]+-[a-z]+(?:-[a-z]+)*/g, "sonnet"],
+	// arena's runners and judge must differ from the parent, so each Claude model counts as its own family.
 	[
-		/Families go by prefix: `claude-\*`, and `grok-\*` with `cursor-grok-\*` and `composer-\*`\. A refused `composer-\*` entry runs on [^.]+\. If the family has no default, or the Agent tool rejects that default, use the closest valid slug of the same family from its error message, or drop the seat and say so when there is none\./g,
-		"Under Claude Code that default is `opus` for every entry, and each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family. If the Agent tool rejects `opus`, drop the seat and say so.",
+		/Families go by prefix, and the longest match wins: `claude-fable-\*`, `claude-\*`, and `gemini-\*`, after dropping a leading `cursor-`\. Any other slug's family is its text before the first hyphen\./g,
+		"Under Claude Code each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family.",
 	],
 	[
-		/With the default pool, a Claude parent gets `sonnet`\. A parent from any other family gets `opus` first\./g,
-		"With the default pool, an `opus` parent gets `sonnet`, and any other parent gets `opus`.",
+		/The judge is never from the parent's vendor, and Fable counts as Claude for that check, so use the first entry from another vendor\./g,
+		"Under Claude Code every entry is a Claude model, so the vendor check compares models instead. The judge is never the parent's model, so use the first entry that differs from it.",
 	],
+	[/another vendor's model/g, "another model"],
+	// The setup-pstack overlay writes no `# defaults` line, so this check would ask for a rerun every session.
+	[/ If the rule has no `# defaults: 3` line, an older setup wrote it\. Keep honoring its lines, and tell the user once per session to rerun `\/setup-pstack`\./g, ""],
 ];
 
 const ADAPTER_NOTE = `
@@ -221,7 +225,7 @@ writeFileSync(
 
 // Leftover Cursor-isms mean upstream added something REPLACEMENTS does not cover yet.
 // `cursor-team-kit`, `environment:` and Bugbot are left in on purpose, ADAPTER_NOTE translates them.
-const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gpt-5|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt|spawn)|`Task`/;
+const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gemini-|gpt-5|[a-z]-fast\b|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt|spawn)|`Task`/;
 const residuals = walk(OUT)
 	.filter((f) => /\.(md|sh)$/.test(f))
 	.flatMap((f) =>
