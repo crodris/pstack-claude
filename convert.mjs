@@ -57,12 +57,20 @@ const REPLACEMENTS = [
 
 	// Models. Claude Code subagents run Claude only, so the cross-vendor panel maps by role:
 	// Fable to fable, Opus to opus, and the non-Claude seat to sonnet, so panels stay three distinct models.
-	// Claude Code aliases carry no speed or level suffix, so these sentences about slug suffixes go first.
+	// Claude Code aliases carry no speed suffix, so these sentences about slug suffixes go first.
+	// Each slug keeps its level as `<alias> <level>`, which ADAPTER_NOTE maps to Agent `effort`,
+	// the same mapping upstream's docs/harness/claude-code.md uses. Agent frontmatter takes the alias alone.
 	[/ Opus 5\.5 always runs its `-fast` slug\./g, ""],
 	[/ A Gemini seat never runs above `gemini-[^`]+`, its top slug\./g, ""],
-	[/claude-opus-[\d-]+[a-z]+(?:-fast)?/g, "opus"],
-	[/claude-fable-[\d-]+[a-z]+(?:-fast)?/g, "fable"],
-	[/gemini-[\d.]+-[a-z]+(?:-[a-z]+)*/g, "sonnet"],
+	[/^model: claude-opus-[\d-]+[a-z]+(?:-fast)?$/gm, "model: opus"],
+	[/claude-opus-[\d-]+(low|medium|high|xhigh|max)(?:-fast)?/g, "opus $1"],
+	[/claude-fable-[\d-]+(low|medium|high|xhigh|max)(?:-fast)?/g, "fable $1"],
+	[/gemini-[\d.]+-[a-z]+-(low|medium|high|xhigh|max)\b/g, "sonnet $1"],
+	[/The `\/setup-pstack` budget sets each role's starting level\./g, "Each role starts at its default's level, since `/setup-pstack` sets only the model."],
+	[
+		/If it rejects the default, use the closest valid slug of the same family from its error message\./g,
+		"If it rejects the default, omit `model` and say so.",
+	],
 	// Every seat is a Claude model, so arena's families and its judge's vendor check compare models.
 	[
 		/Families go by prefix, and the longest match wins: `claude-fable-\*`, `claude-\*`, and `gemini-\*`, after dropping a leading `cursor-`\. Any other slug's family is its text before the first hyphen\./g,
@@ -85,7 +93,7 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 - **Sibling skills.** "The **x** skill", \`/x\`, and \`principle-*\` references mean the file \`../x/SKILL.md\` relative to this skill's base directory. Read it and follow it. Do not call the Skill tool for pstack skills, most are user-invocable only.
 - **Subagents.** Spawn with the Agent tool. It has no \`readonly\` or \`environment\` parameter, so ignore both. There is no cloud environment. Workers run locally, and any worker that writes gets \`isolation: "worktree"\`.
 - **Models.** Agent \`model\` accepts only \`fable\`, \`opus\`, \`sonnet\`, \`haiku\`. Per-role overrides live in \`$HOME/.claude/rules/pstack-models.md\` (written by \`/pstack:setup-pstack\`). A value of \`inherit-parent\` or \`auto\` means omit \`model\`.
-- **Reasoning levels.** The aliases carry no level. Pass the level a skill picks (\`low\`, \`medium\`, \`high\`, \`xhigh\`, \`max\`) as the Agent \`effort\` parameter.
+- **Reasoning levels.** A default such as \`opus xhigh\` names the Agent \`model\` and a level. Pass the level a skill picks (\`low\`, \`medium\`, \`high\`, \`xhigh\`, \`max\`) as the Agent \`effort\` parameter.
 - **Missing Cursor skills.** \`cursor-team-kit\` is not installed. For \`/deslop\` use \`/simplify\`. For \`control-ui\` drive the app with whatever browser automation tools are available. For \`control-cli\` use Bash. For Cursor's built-in \`create-skill\` use any installed skill-authoring skill.
 - **Bugbot.** Guidance about Bugbot applies to whatever review bot comments on the PR (CodeRabbit, etc.).
 `;
@@ -226,7 +234,7 @@ writeFileSync(
 
 // Leftover Cursor-isms mean upstream added something REPLACEMENTS does not cover yet.
 // `cursor-team-kit`, `environment:` and Bugbot are left in on purpose, ADAPTER_NOTE translates them.
-const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gemini-|gpt-5|\b(?:fable|opus|sonnet|haiku)-fast\b|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt|spawn)|`Task`/;
+const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gemini-|gpt-5|\b(?:fable|opus|sonnet|haiku|low|medium|high|xhigh|max)-fast\b|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt|spawn)|`Task`/;
 const residuals = walk(OUT)
 	.filter((f) => /\.(md|sh)$/.test(f))
 	.flatMap((f) =>
