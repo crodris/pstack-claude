@@ -34,6 +34,14 @@ rules:
     path: "SKILL.md"
     message: "*write each entry the way you'd tell a teammate*"
     reason: "show-me-your-work: style guidance for a decision log the user asked for."
+  - id: "RA2"
+    path: "SKILL.md"
+    message: "Write the premise down*"
+    reason: >-
+      poteto-mode: the span runs from the Attack the Premise principle to "`/setup-pstack`
+      writes `~/.claude/rules/pstack-models.md`" in the Subagents section, the same
+      user-requested rule file the setup-pstack rule above accepts. No other `~/.` path
+      sits between them.
 
   # AS1/AS3 fire on paths to skill files. convert.mjs rewrites upstream's `.cursor/`
   # paths to `.claude/`, so these point at Claude Code skill directories.
@@ -72,6 +80,10 @@ rules:
     path: "playbooks/babysit.md"
     message: "git push --force"
     reason: "The owner publishes its own rebase with `git push --force-with-lease`, per autopilot-full."
+  - id: "TM1"
+    path: "playbooks/autopilot-full.md"
+    message: "git push --force-with-lease`.*"
+    reason: "autopilot-full: each PR owner rebases its own branch and publishes it with `git push --force-with-lease`."
   - id: "TM1"
     path: "playbooks/opening-a-pr.md"
     message: "git reset --hard"
