@@ -57,16 +57,16 @@ const REPLACEMENTS = [
 
 	// Models. Claude Code subagents run Claude only, so the cross-vendor panel maps by role:
 	// Fable to fable, Opus to opus, and the non-Claude seat to sonnet, so panels stay three distinct models.
-	// Claude Code aliases carry no speed or level, so these sentences about slug suffixes go first.
+	// Claude Code aliases carry no speed or level suffix, so these sentences about slug suffixes go first.
 	[/ Opus 5\.5 always runs its `-fast` slug\./g, ""],
 	[/ A Gemini seat never runs above `gemini-[^`]+`, its top slug\./g, ""],
 	[/claude-opus-[\d-]+[a-z]+(?:-fast)?/g, "opus"],
 	[/claude-fable-[\d-]+[a-z]+(?:-fast)?/g, "fable"],
 	[/gemini-[\d.]+-[a-z]+(?:-[a-z]+)*/g, "sonnet"],
-	// arena's runners and judge must differ from the parent, so each Claude model counts as its own family.
+	// Every seat is a Claude model, so arena's families and its judge's vendor check compare models.
 	[
 		/Families go by prefix, and the longest match wins: `claude-fable-\*`, `claude-\*`, and `gemini-\*`, after dropping a leading `cursor-`\. Any other slug's family is its text before the first hyphen\./g,
-		"Under Claude Code each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family.",
+		"Under Claude Code each model (`fable`, `opus`, `sonnet`, `haiku`) counts as its own family, so a rejected slug has no same-family slug to fall back to.",
 	],
 	[
 		/The judge is never from the parent's vendor, and Fable counts as Claude for that check, so use the first entry from another vendor\./g,
@@ -85,6 +85,7 @@ This skill is ported from Cursor's pstack. Apply these translations wherever the
 - **Sibling skills.** "The **x** skill", \`/x\`, and \`principle-*\` references mean the file \`../x/SKILL.md\` relative to this skill's base directory. Read it and follow it. Do not call the Skill tool for pstack skills, most are user-invocable only.
 - **Subagents.** Spawn with the Agent tool. It has no \`readonly\` or \`environment\` parameter, so ignore both. There is no cloud environment. Workers run locally, and any worker that writes gets \`isolation: "worktree"\`.
 - **Models.** Agent \`model\` accepts only \`fable\`, \`opus\`, \`sonnet\`, \`haiku\`. Per-role overrides live in \`$HOME/.claude/rules/pstack-models.md\` (written by \`/pstack:setup-pstack\`). A value of \`inherit-parent\` or \`auto\` means omit \`model\`.
+- **Reasoning levels.** The aliases carry no level. Pass the level a skill picks (\`low\`, \`medium\`, \`high\`, \`xhigh\`, \`max\`) as the Agent \`effort\` parameter.
 - **Missing Cursor skills.** \`cursor-team-kit\` is not installed. For \`/deslop\` use \`/simplify\`. For \`control-ui\` drive the app with whatever browser automation tools are available. For \`control-cli\` use Bash. For Cursor's built-in \`create-skill\` use any installed skill-authoring skill.
 - **Bugbot.** Guidance about Bugbot applies to whatever review bot comments on the PR (CodeRabbit, etc.).
 `;
@@ -225,7 +226,7 @@ writeFileSync(
 
 // Leftover Cursor-isms mean upstream added something REPLACEMENTS does not cover yet.
 // `cursor-team-kit`, `environment:` and Bugbot are left in on purpose, ADAPTER_NOTE translates them.
-const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gemini-|gpt-5|[a-z]-fast\b|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt|spawn)|`Task`/;
+const RESIDUAL = /\.cursor\b|\.mdc\b|grok-|gemini-|gpt-5|\b(?:fable|opus|sonnet|haiku)-fast\b|claude-(opus|fable|sonnet|haiku)-\d|\bAskQuestion|generalPurpose|\bTask\b.{0,12}(call|tool|subagent|prompt|spawn)|`Task`/;
 const residuals = walk(OUT)
 	.filter((f) => /\.(md|sh)$/.test(f))
 	.flatMap((f) =>

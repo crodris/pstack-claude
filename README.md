@@ -178,5 +178,5 @@ You can also type `/pstack:principle-<name>`.
 ## Not ported
 
 - `make-bot-ui` and `automations/benny` depend on Cursor Automations webhooks.
-- Cross-vendor model panels. Claude Code subagents run Claude only, so the generated panel defaults are `opus, sonnet`, and every `setup-pstack` budget leaves `fable` out.
+- Cross-vendor model panels. Claude Code subagents run Claude only, so upstream's Gemini seat maps to `sonnet`. The generated panel defaults are `fable, opus, sonnet`, the arena judge pool is `opus, sonnet`, and every `setup-pstack` budget leaves `fable` out.
 - Cloud worker environment. Workers run locally in worktrees.
