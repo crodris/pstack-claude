@@ -88,11 +88,11 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 - Code, prose, and judgment: `opus xhigh`.
 - Trivial mechanical edits: `opus high`.
-- Diverse review and design panels: one runner each on `fable high`, `opus high`, and `sonnet high`.
+- Diverse review and design panels: one runner each on `fable high`, `opus high`, and `sonnet xhigh`.
 
 **Fable 5.2 is an exception.** It runs outside a panel only when the user named it for this task or two Opus 5.5 xhigh runs of the same brief failed its check. Say which. Difficulty alone never qualifies.
 
-**Match the model to the job.** Start from the role's line or default, keep its family, and set the level the job needs. Each role starts at its default's level, since `/setup-pstack` sets only the model. Panel seats keep their listed level. Raise any other role one step, up to xhigh, for the hardest or subtlest work, lower it one step for judgment, and two or more steps for routine work. No role runs above xhigh. Verification always runs on the `swarm workers` model, `opus high` by default. If the Agent tool rejects a slug, never pass it again. Fall back to the role's line or default, then the calling skill's fallback, then the closest valid slug of the same family, then omit `model`. Say so.
+**Match the model to the job.** Start from the role's line or default, keep its family, and set the level the job needs. Each role starts at its default's level, since `/setup-pstack` sets only the model. Panel seats keep their listed level. Raise any other role one step, up to xhigh, for the hardest or subtlest work, lower it one step for judgment, and two or more steps for routine work. No role runs above xhigh. Verification always runs on the `swarm workers` model, `opus high` by default. A Gemini seat runs at `sonnet xhigh` unless its line names another level. If the Agent tool rejects a slug, never pass it again. Fall back to the role's line or default, then the calling skill's fallback, then the closest valid slug of the same family, then omit `model`. Say so.
 
 You own every subagent's work. Review the diff and write your own summary. A second opinion is the same prompt on another model.
 
