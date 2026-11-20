@@ -61,7 +61,9 @@ const REPLACEMENTS = [
 	// Each slug keeps its level as `<alias> <level>`, which ADAPTER_NOTE maps to Agent `effort`,
 	// the same mapping upstream's docs/harness/claude-code.md uses. Agent frontmatter takes the alias alone.
 	[/ Opus 5\.5 always runs its `-fast` slug\./g, ""],
-	[/ A Gemini seat never runs above `gemini-[\d.]+-[a-z]+-(?:low|medium|high|xhigh|max)`\./g, ""],
+	// The Gemini seat is the sonnet seat here, and its panel default already names its level, so its level sentence goes.
+	// It must run before the generic gemini- row below, which would otherwise rewrite the slug it matches.
+	[/ A Gemini seat runs at `gemini-[\d.]+-[a-z]+-(?:low|medium|high|xhigh|max)` unless its line names another level\./g, ""],
 	[/^model: claude-opus-[\d-]+[a-z]+(?:-fast)?$/gm, "model: opus"],
 	[/claude-opus-[\d-]+(low|medium|high|xhigh|max)(?:-fast)?/g, "opus $1"],
 	[/claude-fable-[\d-]+(low|medium|high|xhigh|max)(?:-fast)?/g, "fable $1"],

@@ -88,7 +88,7 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 - Code, prose, and judgment: `opus xhigh`.
 - Trivial mechanical edits: `opus high`.
-- Diverse review and design panels: one runner each on `fable high`, `opus high`, and `sonnet high`.
+- Diverse review and design panels: one runner each on `fable high`, `opus high`, and `sonnet xhigh`.
 
 **Fable 5.2 is an exception.** It runs outside a panel only when the user named it for this task or two Opus 5.5 xhigh runs of the same brief failed its check. Say which. Difficulty alone never qualifies.
 
